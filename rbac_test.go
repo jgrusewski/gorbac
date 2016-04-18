@@ -1,6 +1,7 @@
 package rbac
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -134,4 +135,10 @@ func TestRemoveRoleRecursive(t *testing.T) {
 
 	err = rbacTest.Roles().Remove("forum_moderator", true)
 	assert.Nil(t, err)
+}
+
+func TestDepth(t *testing.T) {
+	depth, err := rbacTest.Roles().Depth(4)
+	assert.Nil(t, err)
+	fmt.Println(depth)
 }

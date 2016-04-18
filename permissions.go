@@ -110,5 +110,9 @@ func (p permissionManager) GetTitle(id int64) (string, error) {
 
 func (p permissionManager) GetPath(id int64) (string, error) {
 	return p.entity.GetPath(id)
+}
+
+func (p permissionManager) Depth(id int64) (int64, error) {
+	return p.entity.Depth(id)
 
 }

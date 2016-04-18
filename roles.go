@@ -265,3 +265,7 @@ func (r roleManager) GetTitle(id int64) (string, error) {
 func (r roleManager) GetPath(id int64) (string, error) {
 	return r.entity.GetPath(id)
 }
+
+func (r roleManager) Depth(id int64) (int64, error) {
+	return r.entity.Depth(id)
+}

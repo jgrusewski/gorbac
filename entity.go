@@ -13,18 +13,18 @@ type Entity interface {
 	AddPath(path string, descriptions []string) (int, error)
 
 	Assign(role Role, permission Permission) (int64, error)
-	//Children()
 	Count() (int64, error)
-	//Depth()
+	Depth(id int64) (int64, error)
 	//Descendants()
-	//Edit()
+	Edit(id int64) error
 	////Unassign()
 	//ReturnId()
+	//ParentNode()
+	//Children()
 	GetDescription(Id int64) (string, error)
 	GetTitle(Id int64) (string, error)
 
 	GetPath(id int64) (string, error)
-	//ParentNode()
 
 	reset(ensure bool) error
 	resetAssignments(ensure bool) error
@@ -397,4 +397,17 @@ func (e entity) pathConditional(id int64) (map[int64]string, error) {
 	}
 
 	return result, nil
+}
+
+func (e entity) Depth(id int64) (int64, error) {
+	res, err := e.pathConditional(id)
+	if err != nil {
+		return 0, err
+	}
+
+	return int64(len(res) - 1), nil
+}
+
+func (e *entity) Edit(id int64) error {
+	return nil
 }
