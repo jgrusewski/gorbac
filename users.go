@@ -12,7 +12,9 @@ type UserManager interface {
 	//HasPermission(roleID, permissionID int) bool
 	Assign(role Role, userId int64) (int64, error)
 	Unassign(role Role, userId int64) error
+	AllRoles(userId int64) ([]Roles, error)
 	HasRole(role Role, userId int64) (bool, error)
+	RoleCount(userId int64) (int64, error)
 
 	resetAssignments(ensure bool) error
 }
@@ -105,6 +107,59 @@ func (u userManager) Unassign(role Role, userId int64) error {
 		return ErrUserRequired
 	}
 
+	roleId, err := u.rbac.roles.getRoleId(role)
+	if err != nil {
+		return err
+	}
+
+	_, err = u.rbac.db.Exec(fmt.Sprintf("DELETE FROM %s WHERE UserId=? AND RoleId=?", u.getTable()), userId, roleId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u userManager) AllRoles(userId int64) ([]Roles, error) {
+	if userId == 0 {
+		return nil, ErrUserRequired
+	}
+	query := fmt.Sprintf(`
+		SELECT
+			TR.Id, TR.Title, TR.Description
+		FROM
+			%s AS TRel
+		JOIN roles AS TR ON
+		(TRel.RoleID=TR.ID)
+		WHERE TRel.UserID=?`, u.getTable())
+
+	rows, err := u.rbac.db.Query(query, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	var roles []Roles
+	for rows.Next() {
+		var role Roles
+		err := rows.Scan(&role.Id, &role.Title, &role.Description)
+		if err != nil {
+			return nil, err
+		}
+		roles = append(roles, role)
+	}
+
+	return roles, nil
+}
+
+func (u userManager) RoleCount(userId int64) (int64, error) {
+	var result int64
+	err := u.rbac.db.QueryRow(fmt.Sprintf("SELECT COUNT(*) AS Result FROM %s WHERE UserID=?", u.getTable()), userId).Scan(&result)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return result, err
 }
 
 func (u userManager) getTable() string {

@@ -13,6 +13,12 @@ type roleManager struct {
 	table  string
 }
 
+type Roles struct {
+	Id          int64
+	Title       string
+	Description string
+}
+
 func NewRoleManager(r *rbac) RoleManager {
 	var roleManager = new(roleManager)
 	roleManager.table = "roles"

@@ -33,8 +33,20 @@ func TestAssignPermissionToRole(t *testing.T) {
 }
 
 func TestAssignRoleToUser(t *testing.T) {
-	_, err := rbacTest.Users().Assign("forum_moderator", 1)
+	_, err := rbacTest.Users().Assign("forum_moderator", 105)
 	assert.Nil(t, err)
+}
+
+func TestHasRoleSuccess(t *testing.T) {
+	success, err := rbacTest.Users().HasRole("forum_moderator", 105)
+	assert.Nil(t, err)
+	assert.Equal(t, true, success)
+}
+
+func TestHasRoleFailure(t *testing.T) {
+	success, err := rbacTest.Users().HasRole("forum_moderator", 106)
+	assert.Nil(t, err)
+	assert.Equal(t, false, success)
 }
 
 func TestRolesAddPath(t *testing.T) {
@@ -43,17 +55,32 @@ func TestRolesAddPath(t *testing.T) {
 }
 
 func TestCheckPermissionOnUser1(t *testing.T) {
-	success, err := rbacTest.Check("delete_posts", 1)
+	success, err := rbacTest.Check("delete_posts", 105)
 	assert.Nil(t, err)
 	assert.Equal(t, true, success)
 }
 
-func TestHasRole(t *testing.T) {
-	success, err := rbacTest.Users().HasRole("forum_moderator", 1)
+func TestUnassignRoleFromUser(t *testing.T) {
+	err := rbacTest.Users().Unassign("forum_moderator", 105)
 	assert.Nil(t, err)
-	assert.Equal(t, true, success)
 
-	success, err = rbacTest.Users().HasRole("forum_moderatoar", 2)
-	assert.Equal(t, ErrTitleNotFound, err)
+	success, err := rbacTest.Users().HasRole("forum_moderator", 105)
+	assert.Nil(t, err)
 	assert.Equal(t, false, success)
+}
+
+func TestAllRoles(t *testing.T) {
+	_, err := rbacTest.Users().Assign("forum_moderator", 105)
+	assert.Nil(t, err)
+
+	roles, err := rbacTest.Users().AllRoles(105)
+	assert.Nil(t, err)
+
+	assert.Equal(t, len(roles), 1)
+
+	result, err := rbacTest.Users().RoleCount(105)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 1, result)
+
 }

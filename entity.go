@@ -81,7 +81,7 @@ func (e entity) Add(title, description string, parentId int64) (int64, error) {
 		return -1, err
 	}
 
-	query = fmt.Sprintf("INSERT INTO %s (`%s`, `%s`, `title`, `description`) VALUES (?,?,?,?)", e.entityHolder.getTable(), Left, Right)
+	query = fmt.Sprintf("INSERT INTO %s (`%s`, `%s`, `title`, `description`) VALUES (?,?,?,?)", e.entityHolder.getTable(), Right, Left)
 
 	res, err := e.rbac.db.Exec(query, right+1, right, title, description)
 	if err != nil {
