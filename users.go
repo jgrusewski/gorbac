@@ -15,8 +15,7 @@ type UserManager interface {
 	AllRoles(userId int64) (Roles, error)
 	HasRole(role Role, userId int64) (bool, error)
 	RoleCount(userId int64) (int64, error)
-
-	resetAssignments(ensure bool) error
+	ResetAssignments(ensure bool) error
 }
 
 type userManager struct {
@@ -48,7 +47,7 @@ func (u userManager) Assign(role Role, userId int64) (int64, error) {
 		if role.(string)[:1] == "/" {
 			log.Fatal("todo fix go by path")
 		} else {
-			roleId, err = u.rbac.Roles().titleId(role.(string))
+			roleId, err = u.rbac.Roles().TitleId(role.(string))
 			if err != nil {
 				return 0, err
 			}
@@ -166,7 +165,7 @@ func (u userManager) getTable() string {
 	return u.table
 }
 
-func (u userManager) resetAssignments(ensure bool) error {
+func (u userManager) ResetAssignments(ensure bool) error {
 	if !ensure {
 		log.Fatal("You must pass true to this function, otherwise it won't work.")
 	}

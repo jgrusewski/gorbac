@@ -19,7 +19,7 @@ type RoleManager interface {
 
 type roleManager struct {
 	rbac   *rbac
-	entity *entity
+	entity entityInternal
 	table  string
 }
 
@@ -43,7 +43,7 @@ func NewRoleManager(r *rbac) RoleManager {
 }
 
 func (r roleManager) Assign(role Role, permission Permission) (int64, error) {
-	return r.entity.Assign(role, permission)
+	return r.entity.assign(role, permission)
 }
 
 func (r roleManager) HasPermission(role Role, permission Permission) (bool, error) {
@@ -118,18 +118,18 @@ func (r roleManager) Remove(role Role, recursive bool) error {
 }
 
 func (r roleManager) Add(title string, description string, parentId int64) (int64, error) {
-	return r.entity.Add(title, description, parentId)
+	return r.entity.add(title, description, parentId)
 }
 
 func (r roleManager) AddPath(path string, description []string) (int, error) {
-	return r.entity.AddPath(path, description)
+	return r.entity.addPath(path, description)
 }
 
-func (r roleManager) titleId(title string) (int64, error) {
+func (r roleManager) TitleId(title string) (int64, error) {
 	return r.entity.titleId(title)
 }
 
-func (r roleManager) reset(ensure bool) error {
+func (r roleManager) Reset(ensure bool) error {
 	return r.entity.reset(ensure)
 }
 
@@ -137,7 +137,7 @@ func (r roleManager) getTable() string {
 	return r.table
 }
 
-func (r roleManager) resetAssignments(ensure bool) error {
+func (r roleManager) ResetAssignments(ensure bool) error {
 	return r.entity.resetAssignments(ensure)
 }
 
@@ -235,37 +235,25 @@ func (r roleManager) getRoleId(role Role) (int64, error) {
 	return roleId, nil
 }
 
-func (r roleManager) pathId(path string) (int64, error) {
-	return r.entity.pathId(path)
-}
-
-func (r roleManager) deleteConditional(id int64) error {
-	return r.entity.deleteConditional(id)
-}
-
-func (r roleManager) deleteSubtreeConditional(id int64) error {
-	return r.entity.deleteSubtreeConditional(id)
-}
-
-func (r roleManager) pathConditional(id int64) (map[int64]string, error) {
-	return r.entity.pathConditional(id)
-}
-
 func (r roleManager) Count() (int64, error) {
-	return r.entity.Count()
+	return r.entity.count()
 }
 func (r roleManager) GetDescription(id int64) (string, error) {
-	return r.entity.GetTitle(id)
+	return r.entity.getTitle(id)
 }
 
 func (r roleManager) GetTitle(id int64) (string, error) {
-	return r.entity.GetTitle(id)
+	return r.entity.getTitle(id)
 }
 
 func (r roleManager) GetPath(id int64) (string, error) {
-	return r.entity.GetPath(id)
+	return r.entity.getPath(id)
 }
 
 func (r roleManager) Depth(id int64) (int64, error) {
-	return r.entity.Depth(id)
+	return r.entity.depth(id)
+}
+
+func (r roleManager) Edit(id int64) error {
+	return r.entity.edit(id)
 }

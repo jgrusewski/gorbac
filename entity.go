@@ -17,15 +17,38 @@ type Entity interface {
 	Depth(id int64) (int64, error)
 	//Descendants()
 	Edit(id int64) error
+	TitleId(title string) (int64, error)
+
 	////Unassign()
 	//ReturnId()
 	//ParentNode()
 	//Children()
+	Reset(ensure bool) error
+	ResetAssignments(ensure bool) error
+
 	GetDescription(Id int64) (string, error)
 	GetTitle(Id int64) (string, error)
 
 	GetPath(id int64) (string, error)
+}
 
+type entityInternal interface {
+	add(title string, description string, parentId int64) (int64, error)
+	addPath(path string, descriptions []string) (int, error)
+
+	assign(role Role, permission Permission) (int64, error)
+	count() (int64, error)
+	depth(id int64) (int64, error)
+	//Descendants()
+	edit(id int64) error
+	////Unassign()
+	//ReturnId()
+	//ParentNode()
+	//Children()
+	getDescription(Id int64) (string, error)
+	getTitle(Id int64) (string, error)
+
+	getPath(id int64) (string, error)
 	reset(ensure bool) error
 	resetAssignments(ensure bool) error
 
@@ -53,11 +76,11 @@ type entity struct {
 	entityHolder entityHolder
 }
 
-func (e entity) Assign(role Role, permission Permission) (int64, error) {
+func (e entity) assign(role Role, permission Permission) (int64, error) {
 	return e.rbac.Assign(role, permission)
 }
 
-func (e entity) Add(title, description string, parentId int64) (int64, error) {
+func (e entity) add(title, description string, parentId int64) (int64, error) {
 	e.lock()
 	defer e.unlock()
 
@@ -162,7 +185,7 @@ func (e entity) resetAssignments(ensure bool) error {
 		return err
 	}
 
-	e.Assign(e.rbac.rootId(), e.rbac.rootId())
+	e.assign(e.rbac.rootId(), e.rbac.rootId())
 
 	return nil
 }
@@ -205,7 +228,7 @@ func (e entity) pathId(path string) (int64, error) {
 	return id, nil
 }
 
-func (e entity) AddPath(path string, descriptions []string) (int, error) {
+func (e entity) addPath(path string, descriptions []string) (int, error) {
 	if path[:1] != "/" {
 		return 0, fmt.Errorf("The path supplied is not valid.")
 	}
@@ -236,7 +259,7 @@ func (e entity) AddPath(path string, descriptions []string) (int, error) {
 		}
 
 		if pathId == 0 {
-			parentId, err = e.Add(part, description, parentId)
+			parentId, err = e.add(part, description, parentId)
 			if err != nil {
 				return nodesCreated, err
 			}
@@ -250,7 +273,7 @@ func (e entity) AddPath(path string, descriptions []string) (int, error) {
 	return nodesCreated, nil
 }
 
-func (e entity) Count() (int64, error) {
+func (e entity) count() (int64, error) {
 	var result int64
 	err := e.rbac.db.QueryRow("SELECT COUNT(*) FROM %s", e.entityHolder.getTable()).Scan(&result)
 	return result, err
@@ -326,7 +349,7 @@ func (e entity) deleteSubtreeConditional(id int64) error {
 	return nil
 }
 
-func (e entity) GetDescription(id int64) (string, error) {
+func (e entity) getDescription(id int64) (string, error) {
 	var result string
 	err := e.rbac.db.QueryRow(fmt.Sprintf("SELECT description FROM %s WHERE id=?", e.entityHolder.getTable()), id).Scan(&result)
 	if err != nil {
@@ -336,7 +359,7 @@ func (e entity) GetDescription(id int64) (string, error) {
 	return result, nil
 }
 
-func (e entity) GetTitle(id int64) (string, error) {
+func (e entity) getTitle(id int64) (string, error) {
 	var result string
 	err := e.rbac.db.QueryRow(fmt.Sprintf("SELECT title FROM %s WHERE id=?", e.entityHolder.getTable()), id).Scan(&result)
 	if err != nil {
@@ -346,7 +369,7 @@ func (e entity) GetTitle(id int64) (string, error) {
 	return result, nil
 }
 
-func (e entity) GetPath(id int64) (string, error) {
+func (e entity) getPath(id int64) (string, error) {
 	res, err := e.pathConditional(id)
 	if err != nil {
 		return "", err
@@ -399,7 +422,7 @@ func (e entity) pathConditional(id int64) (map[int64]string, error) {
 	return result, nil
 }
 
-func (e entity) Depth(id int64) (int64, error) {
+func (e entity) depth(id int64) (int64, error) {
 	res, err := e.pathConditional(id)
 	if err != nil {
 		return 0, err
@@ -408,6 +431,6 @@ func (e entity) Depth(id int64) (int64, error) {
 	return int64(len(res) - 1), nil
 }
 
-func (e *entity) Edit(id int64) error {
+func (e *entity) edit(id int64) error {
 	return nil
 }

@@ -124,18 +124,18 @@ func (r rbac) Check(permission Permission, userId int64) (bool, error) {
 }
 
 func (r rbac) Reset(ensure bool) {
-	if err := r.roles.resetAssignments(ensure); err != nil {
+	if err := r.roles.ResetAssignments(ensure); err != nil {
 		log.Fatal(err)
 	}
-	if err := r.roles.reset(ensure); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := r.permissions.reset(ensure); err != nil {
+	if err := r.roles.Reset(ensure); err != nil {
 		log.Fatal(err)
 	}
 
-	if err := r.users.resetAssignments(ensure); err != nil {
+	if err := r.permissions.Reset(ensure); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := r.users.ResetAssignments(ensure); err != nil {
 		log.Fatal(err)
 	}
 }
