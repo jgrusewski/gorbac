@@ -7,6 +7,7 @@ import (
 
 type RoleManager interface {
 	Entity
+
 	HasPermission(role Role, permission Permission) (bool, error)
 	Permissions(role Role) (Permissions, error)
 	UnassignPermissions(role Role) error
@@ -226,7 +227,7 @@ func (r roleManager) getRoleId(role Role) (int64, error) {
 			roleId, err = r.entity.titleId(role.(string))
 
 			if err != nil {
-				return -1, err
+				return 0, err
 			}
 		}
 	}
@@ -244,4 +245,23 @@ func (r roleManager) deleteConditional(id int64) error {
 
 func (r roleManager) deleteSubtreeConditional(id int64) error {
 	return r.entity.deleteSubtreeConditional(id)
+}
+
+func (r roleManager) pathConditional(id int64) (map[int64]string, error) {
+	return r.entity.pathConditional(id)
+}
+
+func (r roleManager) Count() (int64, error) {
+	return r.entity.Count()
+}
+func (r roleManager) GetDescription(id int64) (string, error) {
+	return r.entity.GetTitle(id)
+}
+
+func (r roleManager) GetTitle(id int64) (string, error) {
+	return r.entity.GetTitle(id)
+}
+
+func (r roleManager) GetPath(id int64) (string, error) {
+	return r.entity.GetPath(id)
 }

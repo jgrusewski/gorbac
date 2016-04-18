@@ -14,22 +14,26 @@ type Entity interface {
 
 	Assign(role Role, permission Permission) (int64, error)
 	//Children()
-	//Count()
+	Count() (int64, error)
 	//Depth()
 	//Descendants()
 	//Edit()
-	//GetDescription()
-	//GetPath()
-	//GetTitle()
-	//ParentNode()
-	pathId(path string) (int64, error)
+	////Unassign()
 	//ReturnId()
-	titleId(title string) (int64, error)
-	//Unassign()
+	GetDescription(Id int64) (string, error)
+	GetTitle(Id int64) (string, error)
+
+	GetPath(id int64) (string, error)
+	//ParentNode()
+
 	reset(ensure bool) error
 	resetAssignments(ensure bool) error
+
+	pathId(path string) (int64, error)
+	titleId(title string) (int64, error)
 	deleteConditional(id int64) error
 	deleteSubtreeConditional(id int64) error
+	pathConditional(id int64) (map[int64]string, error)
 }
 
 type entityHolder interface {
@@ -192,9 +196,9 @@ func (e entity) pathId(path string) (int64, error) {
 	err := e.rbac.db.QueryRow(query, parts[len(parts)-1], path).Scan(&id)
 	if err != nil {
 		if err != sql.ErrNoRows {
-			return -1, err
+			return 0, err
 		} else {
-			return -1, ErrPathNotFound
+			return 0, ErrPathNotFound
 		}
 	}
 
@@ -221,12 +225,12 @@ func (e entity) AddPath(path string, descriptions []string) (int, error) {
 	for i, part := range parts {
 		if len(descriptions) > i {
 			description = descriptions[i]
-			_ = description
 		}
 
 		currentPath += "/" + part
 
 		pathId, err = e.pathId(currentPath)
+
 		if err != ErrPathNotFound {
 			return nodesCreated, err
 		}
@@ -244,6 +248,12 @@ func (e entity) AddPath(path string, descriptions []string) (int, error) {
 	}
 
 	return nodesCreated, nil
+}
+
+func (e entity) Count() (int64, error) {
+	var result int64
+	err := e.rbac.db.QueryRow("SELECT COUNT(*) FROM %s", e.entityHolder.getTable()).Scan(&result)
+	return result, err
 }
 
 func (e entity) deleteConditional(id int64) error {
@@ -314,4 +324,77 @@ func (e entity) deleteSubtreeConditional(id int64) error {
 	}
 
 	return nil
+}
+
+func (e entity) GetDescription(id int64) (string, error) {
+	var result string
+	err := e.rbac.db.QueryRow(fmt.Sprintf("SELECT description FROM %s WHERE id=?", e.entityHolder.getTable()), id).Scan(&result)
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
+}
+
+func (e entity) GetTitle(id int64) (string, error) {
+	var result string
+	err := e.rbac.db.QueryRow(fmt.Sprintf("SELECT title FROM %s WHERE id=?", e.entityHolder.getTable()), id).Scan(&result)
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
+}
+
+func (e entity) GetPath(id int64) (string, error) {
+	res, err := e.pathConditional(id)
+	if err != nil {
+		return "", err
+	}
+
+	var output string
+	for i := range res {
+
+		if id == 1 {
+			output = "/"
+		} else {
+			output += "/" + res[i]
+		}
+
+	}
+	if len(output) > 1 {
+		return output[len(res[1])+1:], nil
+	}
+
+	return output, nil
+}
+
+func (e entity) pathConditional(id int64) (map[int64]string, error) {
+	query := fmt.Sprintf(`
+		SELECT parent.ID, parent.Title
+		FROM %s AS node,
+			%s AS parent
+		WHERE node.%s BETWEEN parent.%s AND parent.%s
+		AND ( node.id=? )
+		ORDER BY parent.%s`, e.entityHolder.getTable(), e.entityHolder.getTable(), Left, Left, Right, Left)
+
+	rows, err := e.rbac.db.Query(query, id)
+	if err != nil {
+		return nil, err
+	}
+
+	var result map[int64]string = make(map[int64]string, 0)
+
+	for rows.Next() {
+		var id int64
+		var title string
+		err := rows.Scan(&id, &title)
+		if err != nil {
+			return nil, err
+		}
+		result[id] = title
+
+	}
+
+	return result, nil
 }

@@ -1,7 +1,6 @@
 package rbac
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -51,8 +50,9 @@ func TestHasRoleFailure(t *testing.T) {
 }
 
 func TestRolesAddPath(t *testing.T) {
-	_, err := rbacTest.Roles().AddPath("/admin/test", []string{"admin", "test"})
+	path, err := rbacTest.Roles().AddPath("/admin/test", []string{"admin", "test"})
 	assert.Nil(t, err)
+	assert.NotEqual(t, 0, path)
 }
 
 func TestCheckPermissionOnUser1(t *testing.T) {
@@ -96,7 +96,7 @@ func TestRoleHasPermission(t *testing.T) {
 	success, err := rbacTest.Roles().HasPermission("forum_moderator", "delete_posts")
 	assert.Nil(t, err)
 
-	fmt.Println(success)
+	assert.Equal(t, true, success)
 }
 
 func TestRemoveRole(t *testing.T) {
@@ -110,6 +110,12 @@ func TestRemoveRole(t *testing.T) {
 
 	err = rbacTest.Roles().Remove("forum_moderator", false)
 	assert.Nil(t, err)
+}
+func TestGetPath(t *testing.T) {
+	path, err := rbacTest.Roles().GetPath(4)
+	assert.Nil(t, err)
+	assert.Equal(t, "/admin/test", path)
+
 }
 
 func TestRemoveRoleRecursive(t *testing.T) {

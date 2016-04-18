@@ -71,12 +71,12 @@ func (p permissionManager) getPermissionId(permission Permission) (int64, error)
 		if permission.(string)[:1] == "/ " {
 			permissionId, err = p.entity.pathId(permission.(string))
 			if err != nil {
-				return -1, err
+				return 0, err
 			}
 		} else {
 			permissionId, err = p.entity.titleId(permission.(string))
 			if err != nil {
-				return -1, err
+				return 0, err
 			}
 		}
 	}
@@ -90,4 +90,25 @@ func (p permissionManager) deleteSubtreeConditional(id int64) error {
 
 func (p permissionManager) deleteConditional(id int64) error {
 	return p.entity.deleteConditional(id)
+}
+
+func (p permissionManager) pathConditional(id int64) (map[int64]string, error) {
+	return p.entity.pathConditional(id)
+}
+
+func (p permissionManager) Count() (int64, error) {
+	return p.entity.Count()
+}
+
+func (p permissionManager) GetDescription(id int64) (string, error) {
+	return p.entity.GetTitle(id)
+}
+
+func (p permissionManager) GetTitle(id int64) (string, error) {
+	return p.entity.GetTitle(id)
+}
+
+func (p permissionManager) GetPath(id int64) (string, error) {
+	return p.entity.GetPath(id)
+
 }

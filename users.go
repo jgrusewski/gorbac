@@ -39,7 +39,7 @@ func (u userManager) Assign(role Role, userId int64) (int64, error) {
 	var roleId int64
 
 	if userId == 0 {
-		return -1, fmt.Errorf("userId cannot be null")
+		return 0, fmt.Errorf("userId cannot be null")
 	}
 
 	if _, ok := role.(int64); ok {
@@ -50,7 +50,7 @@ func (u userManager) Assign(role Role, userId int64) (int64, error) {
 		} else {
 			roleId, err = u.rbac.Roles().titleId(role.(string))
 			if err != nil {
-				return -1, err
+				return 0, err
 			}
 		}
 	}
@@ -59,7 +59,7 @@ func (u userManager) Assign(role Role, userId int64) (int64, error) {
 		var query = fmt.Sprintf("INSERT INTO %s (UserID, RoleID, AssignmentDate) VALUES(?,?,?)", u.getTable())
 		res, err := u.rbac.db.Exec(query, userId, roleId, time.Now().Nanosecond())
 		if err != nil {
-			return -1, err
+			return 0, err
 		}
 
 		insertId, _ := res.LastInsertId()
@@ -67,7 +67,7 @@ func (u userManager) Assign(role Role, userId int64) (int64, error) {
 		return insertId, nil
 	}
 
-	return -1, fmt.Errorf("role could not be found")
+	return 0, fmt.Errorf("role could not be found")
 }
 
 func (u userManager) HasRole(role Role, userId int64) (bool, error) {

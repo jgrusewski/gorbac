@@ -58,17 +58,17 @@ func (r *rbac) Assign(role Role, permission Permission) (int64, error) {
 
 	roleId, err = r.Roles().getRoleId(role)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 
 	permissionId, err = r.permissions.getPermissionId(permission)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 
 	res, err := r.db.Exec("INSERT INTO rolepermissions (RoleID, PermissionID, AssignmentDate) VALUES(?,?,?)", roleId, permissionId, time.Now().Nanosecond())
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 
 	insertId, _ := res.LastInsertId()
