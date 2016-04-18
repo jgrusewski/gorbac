@@ -13,6 +13,15 @@ type permissionManager struct {
 	table  string
 }
 
+type Permission interface{}
+type Permissions []permission
+
+type permission struct {
+	Id          int64
+	Title       string
+	Description string
+}
+
 func NewPermissionManager(r *rbac) PermissionManager {
 	var permissionManager = new(permissionManager)
 	permissionManager.table = "permissions"
@@ -73,4 +82,12 @@ func (p permissionManager) getPermissionId(permission Permission) (int64, error)
 	}
 
 	return permissionId, nil
+}
+
+func (p permissionManager) deleteSubtreeConditional(id int64) error {
+	return p.entity.deleteSubtreeConditional(id)
+}
+
+func (p permissionManager) deleteConditional(id int64) error {
+	return p.entity.deleteConditional(id)
 }

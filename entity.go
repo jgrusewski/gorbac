@@ -28,6 +28,8 @@ type Entity interface {
 	//Unassign()
 	reset(ensure bool) error
 	resetAssignments(ensure bool) error
+	deleteConditional(id int64) error
+	deleteSubtreeConditional(id int64) error
 }
 
 type entityHolder interface {
@@ -242,4 +244,74 @@ func (e entity) AddPath(path string, descriptions []string) (int, error) {
 	}
 
 	return nodesCreated, nil
+}
+
+func (e entity) deleteConditional(id int64) error {
+	var left, right int64
+	query := fmt.Sprintf(`SELECT %s, %s
+		FROM %s 
+	WHERE ID=? LIMIT 1`, Left, Right, e.entityHolder.getTable())
+
+	err := e.rbac.db.QueryRow(query, id).Scan(&left, &right)
+	if err != nil {
+		return err
+	}
+
+	_, err = e.rbac.db.Exec(fmt.Sprintf("DELETE FROM %s WHERE %s = ?", e.entityHolder.getTable(), Left), left)
+	if err != nil {
+		return err
+	}
+
+	query = fmt.Sprintf("UPDATE %s SET %s = %s -1, %s = %s -1 WHERE %s BETWEEN ? AND ?", e.entityHolder.getTable(), Right, Right, Left, Left, Left)
+	_, err = e.rbac.db.Query(query, left, right)
+	if err != nil {
+		return err
+	}
+
+	query = fmt.Sprintf("UPDATE %s SET %s = %s -2 WHERE %s > ?", e.entityHolder.getTable(), Right, Right, Right)
+	_, err = e.rbac.db.Exec(query, right)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	query = fmt.Sprintf("UPDATE %s SET %s = %s -2 WHERE %s > ?", e.entityHolder.getTable(), Left, Left, Left)
+	_, err = e.rbac.db.Query(query, right)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e entity) deleteSubtreeConditional(id int64) error {
+	var left, right, width int64
+	query := fmt.Sprintf(`SELECT %s, %s, %s-%s+1 as Width
+		FROM %s 
+	WHERE ID=? LIMIT 1`, Left, Right, Right, Left, e.entityHolder.getTable())
+
+	err := e.rbac.db.QueryRow(query, id).Scan(&left, &right, &width)
+	if err != nil {
+		return err
+	}
+
+	query = fmt.Sprintf("DELETE FROM %s WHERE %s BETWEEN ? AND ?", e.entityHolder.getTable(), Left)
+	_, err = e.rbac.db.Query(query, right)
+	if err != nil {
+		return err
+	}
+
+	query = fmt.Sprintf("UPDATE %s SET %s = %s - ? WHERE %s > ?", e.entityHolder.getTable(), Right, Right, Right)
+	_, err = e.rbac.db.Query(query, width, right)
+	if err != nil {
+		return err
+	}
+
+	query = fmt.Sprintf("UPDATE %s SET %s = %s - ? WHERE %s > ?", e.entityHolder.getTable(), Left, Left, Left)
+	_, err = e.rbac.db.Query(query, width, right)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -1,6 +1,7 @@
 package rbac
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -82,5 +83,49 @@ func TestAllRoles(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, 1, result)
+}
 
+func TestRolePermissions(t *testing.T) {
+	result, err := rbacTest.Roles().Permissions("forum_moderator")
+	assert.Nil(t, err)
+
+	assert.Equal(t, 1, len(result))
+}
+
+func TestRoleHasPermission(t *testing.T) {
+	success, err := rbacTest.Roles().HasPermission("forum_moderator", "delete_posts")
+	assert.Nil(t, err)
+
+	fmt.Println(success)
+}
+
+func TestRemoveRole(t *testing.T) {
+	var err error
+
+	permissionId, err := rbacTest.Permissions().Add("edit_posts", "User can edit posts", 0)
+	assert.Nil(t, err)
+
+	_, err = rbacTest.Assign("forum_moderator", permissionId)
+	assert.Nil(t, err)
+
+	err = rbacTest.Roles().Remove("forum_moderator", false)
+	assert.Nil(t, err)
+}
+
+func TestRemoveRoleRecursive(t *testing.T) {
+	var err error
+	_, err = rbacTest.Roles().Add("forum_moderator", "User can moderate forums", 0)
+	assert.Nil(t, err)
+
+	_, err = rbacTest.Assign("forum_moderator", "delete_posts")
+	assert.Nil(t, err)
+
+	permissionId, err := rbacTest.Permissions().Add("edit_posts", "User can edit posts", 0)
+	assert.Nil(t, err)
+
+	_, err = rbacTest.Assign("forum_moderator", permissionId)
+	assert.Nil(t, err)
+
+	err = rbacTest.Roles().Remove("forum_moderator", true)
+	assert.Nil(t, err)
 }

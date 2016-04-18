@@ -12,7 +12,7 @@ type UserManager interface {
 	//HasPermission(roleID, permissionID int) bool
 	Assign(role Role, userId int64) (int64, error)
 	Unassign(role Role, userId int64) error
-	AllRoles(userId int64) ([]Roles, error)
+	AllRoles(userId int64) (Roles, error)
 	HasRole(role Role, userId int64) (bool, error)
 	RoleCount(userId int64) (int64, error)
 
@@ -120,7 +120,7 @@ func (u userManager) Unassign(role Role, userId int64) error {
 	return nil
 }
 
-func (u userManager) AllRoles(userId int64) ([]Roles, error) {
+func (u userManager) AllRoles(userId int64) (Roles, error) {
 	if userId == 0 {
 		return nil, ErrUserRequired
 	}
@@ -138,9 +138,9 @@ func (u userManager) AllRoles(userId int64) ([]Roles, error) {
 		return nil, err
 	}
 
-	var roles []Roles
+	var roles Roles
 	for rows.Next() {
-		var role Roles
+		var role role
 		err := rows.Scan(&role.Id, &role.Title, &role.Description)
 		if err != nil {
 			return nil, err

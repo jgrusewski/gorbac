@@ -9,9 +9,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type Role interface{}
-type Permission interface{}
-
 type Rbac interface {
 	Assign(Role, Permission) (int64, error)
 	Check(permission Permission, userId int64) (bool, error)
