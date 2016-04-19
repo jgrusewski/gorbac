@@ -18,7 +18,7 @@ RBAC separates the concepts of Users, Roles and Permissions. Roles are defined i
 
 - ![alt tag](http://phprbac.net/img/wrong16.png) Still lots of permits in the system are the problem
 - ![alt tag](http://phprbac.net/img/tick16.png) People move, and only their roles need to be changed
-- ![alt tag](http://phprbac.net/img/wrong16.png)Maintenance of permits is still an issue
+- ![alt tag](http://phprbac.net/img/wrong16.png) Maintenance of permits is still an issue
 - ![alt tag](http://phprbac.net/img/tick16.png) Maintenance of permits assigned to each role is easy, it doesn't change much logically.
 - ![alt tag](http://phprbac.net/img/tick16.png) Role-Permission assignments can be double checked so that no wrong permit is given to any role
 
