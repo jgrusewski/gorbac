@@ -3,7 +3,8 @@
 RBAC Authorization library for Go. 
 It provides developers with NIST Level 2 Standard Role Based Access Control and more.
 
-Ported from http://phprbac.net
+gorbac is ported from http://phprbac.net.
+Currently there is only support for MySQL.
 
 **Why RBAC?**
 Role Based Access Control is the standard means of authorization (access control). The other approach is ACLs, where a table defines who can do what. ACLs are only good for very small systems, because of the following reasons:
