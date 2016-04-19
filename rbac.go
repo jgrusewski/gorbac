@@ -25,7 +25,7 @@ type Rbac interface {
 	// (ensure) Is a required boolean parameter. If true is not passed an fatal will be raised.
 	Reset(ensure bool)
 
-	Permissions() PermissionManager
+	Permissions() *Permissions
 	Roles() *Roles
 	Users() UserManager
 }
@@ -40,7 +40,7 @@ type Config struct {
 }
 
 type rbac struct {
-	permissions PermissionManager
+	permissions *Permissions
 	roles       *Roles
 	users       UserManager
 
@@ -52,7 +52,7 @@ func New(config *Config) Rbac {
 	var rbac = new(rbac)
 
 	rbac.roles = newRoleManager(rbac)
-	rbac.permissions = newPermissionManager(rbac)
+	rbac.permissions = newPermissions(rbac)
 	rbac.users = newUserManager(rbac)
 
 	if config.Port == 0 {
@@ -191,7 +191,7 @@ func (r *rbac) rootId() int64 {
 	return 1
 }
 
-func (r rbac) Permissions() PermissionManager {
+func (r rbac) Permissions() *Permissions {
 	return r.permissions
 }
 

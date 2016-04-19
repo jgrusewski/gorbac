@@ -53,8 +53,6 @@ type role struct {
 	Description string
 }
 
-//type Roles []role
-
 var ErrRowRequired = errors.New("role not found")
 
 func newRoleManager(r *rbac) *Roles {
@@ -168,7 +166,7 @@ func (r Roles) ResetAssignments(ensure bool) error {
 	return r.entity.resetAssignments(ensure)
 }
 
-func (r Roles) Permissions(role Role) (Permissions, error) {
+func (r Roles) Permissions(role Role) ([]permission, error) {
 	var roleId int64
 	var err error
 
@@ -189,7 +187,7 @@ func (r Roles) Permissions(role Role) (Permissions, error) {
 		return nil, err
 	}
 
-	var permissions Permissions
+	var permissions []permission
 	for rows.Next() {
 		var permission permission
 		err := rows.Scan(&permission.Id, &permission.Title, &permission.Description)
