@@ -8,12 +8,15 @@ import (
 	"time"
 )
 
+// User can be Id(int,string)
+type User interface{}
+
 type UserManager interface {
-	Assign(role Role, userId int64) (int64, error)
-	Unassign(role Role, userId int64) error
+	Assign(role Role, userId User) (int64, error)
+	Unassign(role Role, userId User) error
 	AllRoles(userId int64) (Roles, error)
-	HasRole(role Role, userId int64) (bool, error)
-	RoleCount(userId int64) (int64, error)
+	HasRole(role Role, userId User) (bool, error)
+	RoleCount(userId User) (int64, error)
 	ResetAssignments(ensure bool) error
 }
 
@@ -31,19 +34,28 @@ func newUserManager(r *rbac) UserManager {
 	return userManager
 }
 
-func (u userManager) Assign(role Role, userId int64) (int64, error) {
+func (u userManager) Assign(role Role, userId User) (int64, error) {
 	var err error
 	var roleId int64
 
-	if userId == 0 {
-		return 0, fmt.Errorf("userId cannot be null")
+	if _, ok := userId.(string); ok {
+		if userId.(string) == "" {
+			return 0, ErrUserRequired
+		}
+	} else if _, ok := userId.(int64); ok {
+		if userId.(int64) == 0 {
+			return 0, ErrUserRequired
+		}
 	}
 
 	if _, ok := role.(int64); ok {
 		roleId = role.(int64)
 	} else if _, ok := role.(string); ok {
 		if role.(string)[:1] == "/" {
-			log.Fatal("todo fix go by path")
+			roleId, err = u.rbac.Roles().GetRoleId(role.(string))
+			if err != nil {
+				return 0, err
+			}
 		} else {
 			roleId, err = u.rbac.Roles().TitleId(role.(string))
 			if err != nil {
@@ -67,9 +79,15 @@ func (u userManager) Assign(role Role, userId int64) (int64, error) {
 	return 0, fmt.Errorf("role could not be found")
 }
 
-func (u userManager) HasRole(role Role, userId int64) (bool, error) {
-	if userId == 0 {
-		return false, ErrUserRequired
+func (u userManager) HasRole(role Role, userId User) (bool, error) {
+	if _, ok := userId.(string); ok {
+		if userId.(string) == "" {
+			return false, ErrUserRequired
+		}
+	} else if _, ok := userId.(int64); ok {
+		if userId.(int64) == 0 {
+			return false, ErrUserRequired
+		}
 	}
 
 	roleId, err := u.rbac.Roles().GetRoleId(role)
@@ -99,9 +117,15 @@ func (u userManager) HasRole(role Role, userId int64) (bool, error) {
 	return false, nil
 }
 
-func (u userManager) Unassign(role Role, userId int64) error {
-	if userId == 0 {
-		return ErrUserRequired
+func (u userManager) Unassign(role Role, userId User) error {
+	if _, ok := userId.(string); ok {
+		if userId.(string) == "" {
+			return ErrUserRequired
+		}
+	} else if _, ok := userId.(int64); ok {
+		if userId.(int64) == 0 {
+			return ErrUserRequired
+		}
 	}
 
 	roleId, err := u.rbac.roles.GetRoleId(role)
@@ -148,7 +172,17 @@ func (u userManager) AllRoles(userId int64) (Roles, error) {
 	return roles, nil
 }
 
-func (u userManager) RoleCount(userId int64) (int64, error) {
+func (u userManager) RoleCount(userId User) (int64, error) {
+	if _, ok := userId.(string); ok {
+		if userId.(string) == "" {
+			return 0, ErrUserRequired
+		}
+	} else if _, ok := userId.(int64); ok {
+		if userId.(int64) == 0 {
+			return 0, ErrUserRequired
+		}
+	}
+
 	var result int64
 	err := u.rbac.db.QueryRow(fmt.Sprintf("SELECT COUNT(*) AS Result FROM %s WHERE user_id=?", u.getTable()), userId).Scan(&result)
 
