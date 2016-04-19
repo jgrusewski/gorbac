@@ -55,6 +55,10 @@ func New(config *Config) Rbac {
 	rbac.permissions = newPermissionManager(rbac)
 	rbac.users = newUserManager(rbac)
 
+	if config.Port == 0 {
+		config.Port = 3306
+	}
+
 	var err error
 	rbac.db, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true", config.Username, config.Password, config.Host, config.Port, config.Name))
 	if err != nil {
