@@ -5,10 +5,10 @@ CREATE TABLE `permissions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `lft` int(11) NOT NULL,
   `rght` int(11) NOT NULL,
-  `Title` char(64) CHARACTER SET utf8 NOT NULL,
+  `title` char(64) CHARACTER SET utf8 NOT NULL,
   `description` text CHARACTER SET utf8 NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `Title` (`Title`),
+  KEY `Title` (`title`),
   KEY `lft` (`lft`),
   KEY `rght` (`rght`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
