@@ -25,3 +25,4 @@ RBAC separates the concepts of Users, Roles and Permissions. Roles are defined i
 That was NIST Level 1 standard RBAC above, and it still had issues. NIST Level 2 RBAC requires Roles and/or Permissions to be hierarchical, so that management of them can easily be handled in hierarchies. The figure below demonstrates a system in hierarchical RBAC:
 
 ![alt tag](http://phprbac.net/img/rbac.png)
+(source: http://phprbac.net)
