@@ -30,6 +30,7 @@ type Rbac interface {
 	Users() UserManager
 }
 
+// Config MySQL connection string
 type Config struct {
 	Name     string
 	Host     string
@@ -46,13 +47,13 @@ type rbac struct {
 	db *sql.DB
 }
 
-// Initialize a new Rbac Role Manager
+// Initialize Rbac
 func New(config *Config) Rbac {
 	var rbac = new(rbac)
 
-	rbac.roles = NewRoleManager(rbac)
-	rbac.permissions = NewPermissionManager(rbac)
-	rbac.users = NewUserManager(rbac)
+	rbac.roles = newRoleManager(rbac)
+	rbac.permissions = newPermissionManager(rbac)
+	rbac.users = newUserManager(rbac)
 
 	var err error
 	rbac.db, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true", config.Username, config.Password, config.Host, config.Port, config.Name))
@@ -78,7 +79,7 @@ func (r *rbac) Assign(role Role, permission Permission) (int64, error) {
 		return 0, err
 	}
 
-	res, err := r.db.Exec("INSERT INTO role_permissions (role_id, permission_id, AssignmentDate) VALUES(?,?,?)", roleId, permissionId, time.Now().Nanosecond())
+	res, err := r.db.Exec("INSERT INTO role_permissions (role_id, permission_id, assignment_date) VALUES(?,?,?)", roleId, permissionId, time.Now().Nanosecond())
 	if err != nil {
 		return 0, err
 	}

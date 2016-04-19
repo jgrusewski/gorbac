@@ -22,7 +22,7 @@ type permission struct {
 	Description string
 }
 
-func NewPermissionManager(r *rbac) PermissionManager {
+func newPermissionManager(r *rbac) PermissionManager {
 	var permissionManager = new(permissionManager)
 	permissionManager.table = "permissions"
 	permissionManager.rbac = r

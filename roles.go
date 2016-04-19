@@ -36,7 +36,7 @@ type Roles []role
 
 var ErrRowRequired = errors.New("role not found")
 
-func NewRoleManager(r *rbac) RoleManager {
+func newRoleManager(r *rbac) RoleManager {
 	var roleManager = new(roleManager)
 	roleManager.table = "roles"
 	roleManager.rbac = r

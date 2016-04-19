@@ -24,7 +24,7 @@ type userManager struct {
 
 var ErrUserRequired = errors.New("user_id is a required argument")
 
-func NewUserManager(r *rbac) UserManager {
+func newUserManager(r *rbac) UserManager {
 	var userManager = new(userManager)
 	userManager.table = "user_roles"
 	userManager.rbac = r
@@ -53,7 +53,7 @@ func (u userManager) Assign(role Role, userId int64) (int64, error) {
 	}
 
 	if roleId > 0 {
-		var query = fmt.Sprintf("INSERT INTO %s (user_id, role_id, AssignmentDate) VALUES(?,?,?)", u.getTable())
+		var query = fmt.Sprintf("INSERT INTO %s (user_id, role_id, assignment_date) VALUES(?,?,?)", u.getTable())
 		res, err := u.rbac.db.Exec(query, userId, roleId, time.Now().Nanosecond())
 		if err != nil {
 			return 0, err
@@ -109,7 +109,7 @@ func (u userManager) Unassign(role Role, userId int64) error {
 		return err
 	}
 
-	_, err = u.rbac.db.Exec(fmt.Sprintf("DELETE FROM %s WHERE UserId=? AND RoleId=?", u.getTable()), userId, roleId)
+	_, err = u.rbac.db.Exec(fmt.Sprintf("DELETE FROM %s WHERE user_id=? AND role_id=?", u.getTable()), userId, roleId)
 	if err != nil {
 		return err
 	}
