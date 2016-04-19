@@ -9,7 +9,6 @@ import (
 )
 
 type UserManager interface {
-	//HasPermission(roleID, permissionID int) bool
 	Assign(role Role, userId int64) (int64, error)
 	Unassign(role Role, userId int64) error
 	AllRoles(userId int64) (Roles, error)
@@ -19,8 +18,7 @@ type UserManager interface {
 }
 
 type userManager struct {
-	rbac *rbac
-	//entity *entity
+	rbac  *rbac
 	table string
 }
 

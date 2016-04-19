@@ -46,6 +46,10 @@ func (r roleManager) Assign(role Role, permission Permission) (int64, error) {
 	return r.entity.assign(role, permission)
 }
 
+func (r roleManager) Unassign(role Role, permission Permission) error {
+	return r.entity.unassign(role, permission)
+}
+
 func (r roleManager) HasPermission(role Role, permission Permission) (bool, error) {
 	var err error
 	var roleId, permissionId int64
@@ -265,4 +269,11 @@ func (r roleManager) ParentNode(id int64) (int64, error) {
 
 func (r roleManager) ReturnId(entity string) (int64, error) {
 	return r.entity.returnId(entity)
+}
+func (r roleManager) Descendants(absolute bool, id int64) ([]path, error) {
+	return r.entity.descendants(absolute, id)
+}
+
+func (r roleManager) Children(id int64) ([]path, error) {
+	return r.entity.children(id)
 }

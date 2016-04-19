@@ -15,12 +15,12 @@ type Entity interface {
 	Assign(role Role, permission Permission) (int64, error)
 	Count() (int64, error)
 	Depth(id int64) (int64, error)
-	//Descendants()
+	Descendants(absolute bool, id int64) ([]path, error)
 	Edit(id int64, title, description string) error
 	TitleId(title string) (int64, error)
 
-	////Unassign()
-	//Children()
+	Unassign(role Role, permission Permission) error
+	Children(id int64) ([]path, error)
 
 	ReturnId(entity string) (int64, error)
 	ParentNode(id int64) (int64, error)
@@ -40,12 +40,12 @@ type entityInternal interface {
 	assign(role Role, permission Permission) (int64, error)
 	count() (int64, error)
 	depth(id int64) (int64, error)
-	//Descendants()
+	descendants(absolute bool, id int64) ([]path, error)
+
 	edit(id int64, title, description string) error
-	////Unassign()
+	unassign(role Role, permission Permission) error
 	returnId(entity string) (int64, error)
-	//ParentNode()
-	//Children()
+	children(id int64) ([]path, error)
 	getDescription(id int64) (string, error)
 	getTitle(id int64) (string, error)
 
@@ -79,12 +79,18 @@ type entity struct {
 }
 
 type path struct {
-	Id    int64
-	Title string
+	Id          int64
+	Title       string
+	Description string
+	Depth       int64
 }
 
 func (e entity) assign(role Role, permission Permission) (int64, error) {
 	return e.rbac.Assign(role, permission)
+}
+
+func (e entity) unassign(role Role, permission Permission) error {
+	return e.rbac.Unassign(role, permission)
 }
 
 func (e entity) add(title, description string, parentId int64) (int64, error) {
@@ -414,7 +420,7 @@ func (e entity) pathConditional(id int64) ([]path, error) {
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, path{id, title})
+		result = append(result, path{Id: id, Title: title})
 	}
 
 	return result, nil
@@ -462,4 +468,91 @@ func (e entity) returnId(entity string) (int64, error) {
 	}
 
 	return entityId, err
+}
+
+func (e entity) descendants(absolute bool, id int64) ([]path, error) {
+	var depthConcat string
+	if !absolute {
+		depthConcat = "- (sub_tree.innerDepth )"
+	}
+	query := fmt.Sprintf(`
+            SELECT node.ID, node.Title, node.Description, (COUNT(parent.ID)-1 %s) AS Depth
+            FROM %s AS node,
+            	%s AS parent,
+            	%s AS sub_parent,
+            	(
+            		SELECT node.ID, (COUNT(parent.ID) - 1) AS innerDepth
+            		FROM %s AS node,
+            		%s AS parent
+            		WHERE node.%s BETWEEN parent.%s AND parent.%s
+            		AND (node.ID=?)
+            		GROUP BY node.ID
+            		ORDER BY node.%s
+            	) AS sub_tree
+            WHERE node.%s BETWEEN parent.%s AND parent.%s
+            	AND node.%s BETWEEN sub_parent.%s AND sub_parent.%s
+            	AND sub_parent.ID = sub_tree.ID
+            GROUP BY node.ID
+            HAVING Depth > 0
+            ORDER BY node.%s
+	`, depthConcat, e.entityHolder.getTable(), e.entityHolder.getTable(), e.entityHolder.getTable(), e.entityHolder.getTable(), e.entityHolder.getTable(), Left, Left, Right, Left, Left, Left, Right, Left, Left, Right, Left)
+
+	var result []path
+	rows, err := e.rbac.db.Query(query, id)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var p path
+		err := rows.Scan(&p.Id, &p.Title, &p.Description, &p.Depth)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, p)
+	}
+
+	return result, nil
+}
+
+func (e entity) children(id int64) ([]path, error) {
+	query := fmt.Sprintf(`
+            SELECT node.ID, node.Title, node.Description,(COUNT(parent.ID)-1 - (sub_tree.innerDepth )) AS Depth
+            FROM %s AS node,
+            	%s AS parent,
+            	%s AS sub_parent,
+            	(
+            		SELECT node.ID, (COUNT(parent.ID) - 1) AS innerDepth
+            		FROM %s AS node,
+            		%s AS parent
+            		WHERE node.%s BETWEEN parent.%s AND parent.%s
+            		AND (node.ID=?)
+            		GROUP BY node.ID
+            		ORDER BY node.%s
+            	) AS sub_tree
+            WHERE node.%s BETWEEN parent.%s AND parent.%s
+            	AND node.%s BETWEEN sub_parent.%s AND sub_parent.%s
+            	AND sub_parent.ID = sub_tree.ID
+            GROUP BY node.ID
+            HAVING Depth > 0
+            ORDER BY node.%s
+	`, e.entityHolder.getTable(), e.entityHolder.getTable(), e.entityHolder.getTable(), e.entityHolder.getTable(), e.entityHolder.getTable(), Left, Left, Right, Left, Left, Left, Right, Left, Left, Right, Left)
+
+	var result []path
+	rows, err := e.rbac.db.Query(query, id)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var p path
+		err := rows.Scan(&p.Id, &p.Title, &p.Description, &p.Depth)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, p)
+	}
+
+	return result, nil
+
 }

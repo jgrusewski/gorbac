@@ -33,6 +33,10 @@ func (p permissionManager) Assign(role Role, permission Permission) (int64, erro
 	return p.entity.assign(role, permission)
 }
 
+func (p permissionManager) Unassign(role Role, permission Permission) error {
+	return p.entity.unassign(role, permission)
+}
+
 func (p permissionManager) Add(title string, description string, parentId int64) (int64, error) {
 	return p.entity.add(title, description, parentId)
 }
@@ -109,4 +113,12 @@ func (p permissionManager) ParentNode(id int64) (int64, error) {
 
 func (p permissionManager) ReturnId(entity string) (int64, error) {
 	return p.entity.pathId(entity)
+}
+
+func (p permissionManager) Descendants(absolute bool, id int64) ([]path, error) {
+	return p.entity.descendants(absolute, id)
+}
+
+func (p permissionManager) Children(id int64) ([]path, error) {
+	return p.entity.children(id)
 }

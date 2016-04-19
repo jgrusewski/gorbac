@@ -11,6 +11,7 @@ import (
 
 type Rbac interface {
 	Assign(Role, Permission) (int64, error)
+	Unassign(Role, Permission) error
 	Check(permission Permission, userId int64) (bool, error)
 	Reset(ensure bool)
 
@@ -74,6 +75,30 @@ func (r *rbac) Assign(role Role, permission Permission) (int64, error) {
 	insertId, _ := res.LastInsertId()
 
 	return insertId, nil
+}
+
+func (r *rbac) Unassign(role Role, permission Permission) error {
+	var err error
+	var roleId int64
+	var permissionId int64
+
+	roleId, err = r.Roles().GetRoleId(role)
+	if err != nil {
+		return err
+	}
+
+	permissionId, err = r.permissions.GetPermissionId(permission)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.db.Exec("DELETE FROM rolepermissions WHERE RoleId=? AND PermissionID=?", roleId, permissionId)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r rbac) Check(permission Permission, userId int64) (bool, error) {
