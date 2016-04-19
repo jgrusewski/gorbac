@@ -14,7 +14,7 @@ type User interface{}
 type UserManager interface {
 	Assign(role Role, userId User) (int64, error)
 	Unassign(role Role, userId User) error
-	AllRoles(userId int64) (Roles, error)
+	AllRoles(userId User) (Roles, error)
 	HasRole(role Role, userId User) (bool, error)
 	RoleCount(userId User) (int64, error)
 	ResetAssignments(ensure bool) error
@@ -34,6 +34,7 @@ func newUserManager(r *rbac) UserManager {
 	return userManager
 }
 
+// Assigns a role to a user
 func (u userManager) Assign(role Role, userId User) (int64, error) {
 	var err error
 	var roleId int64
@@ -79,6 +80,7 @@ func (u userManager) Assign(role Role, userId User) (int64, error) {
 	return 0, fmt.Errorf("role could not be found")
 }
 
+// Checks to see whether a User has a Role or not.
 func (u userManager) HasRole(role Role, userId User) (bool, error) {
 	if _, ok := userId.(string); ok {
 		if userId.(string) == "" {
@@ -117,6 +119,7 @@ func (u userManager) HasRole(role Role, userId User) (bool, error) {
 	return false, nil
 }
 
+// Unassigns a Role from a User.
 func (u userManager) Unassign(role Role, userId User) error {
 	if _, ok := userId.(string); ok {
 		if userId.(string) == "" {
@@ -141,10 +144,18 @@ func (u userManager) Unassign(role Role, userId User) error {
 	return nil
 }
 
-func (u userManager) AllRoles(userId int64) (Roles, error) {
-	if userId == 0 {
-		return nil, ErrUserRequired
+// Returns all Roles of a User.
+func (u userManager) AllRoles(userId User) (Roles, error) {
+	if _, ok := userId.(string); ok {
+		if userId.(string) == "" {
+			return nil, ErrUserRequired
+		}
+	} else if _, ok := userId.(int64); ok {
+		if userId.(int64) == 0 {
+			return nil, ErrUserRequired
+		}
 	}
+
 	query := fmt.Sprintf(`
 		SELECT
 			TR.Id, TR.Title, TR.Description
