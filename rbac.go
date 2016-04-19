@@ -52,6 +52,18 @@ func New(config *Config) Rbac {
 	return rbac
 }
 
+/**
+* Assigns a role to a permission (or vice-verse)
+*
+* @param mixed $Role
+*         Id, Title and Path
+* @param mixed $Permission
+*         Id, Title and Path
+* @return boolean inserted or existing
+*
+* @todo: Check for valid permissions/roles
+* @todo: Implement custom error handler
+ */
 func (r *rbac) Assign(role Role, permission Permission) (int64, error) {
 	var err error
 	var roleId int64
