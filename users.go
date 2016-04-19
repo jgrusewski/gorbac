@@ -22,11 +22,11 @@ type userManager struct {
 	table string
 }
 
-var ErrUserRequired = errors.New("UserID is a required argument")
+var ErrUserRequired = errors.New("user_id is a required argument")
 
 func NewUserManager(r *rbac) UserManager {
 	var userManager = new(userManager)
-	userManager.table = "userroles"
+	userManager.table = "user_roles"
 	userManager.rbac = r
 	return userManager
 }
@@ -53,7 +53,7 @@ func (u userManager) Assign(role Role, userId int64) (int64, error) {
 	}
 
 	if roleId > 0 {
-		var query = fmt.Sprintf("INSERT INTO %s (UserID, RoleID, AssignmentDate) VALUES(?,?,?)", u.getTable())
+		var query = fmt.Sprintf("INSERT INTO %s (user_id, role_id, AssignmentDate) VALUES(?,?,?)", u.getTable())
 		res, err := u.rbac.db.Exec(query, userId, roleId, time.Now().Nanosecond())
 		if err != nil {
 			return 0, err
@@ -78,11 +78,11 @@ func (u userManager) HasRole(role Role, userId int64) (bool, error) {
 	}
 
 	query := fmt.Sprintf(`
-	SELECT COUNT(*) FROM userroles AS TUR
-	JOIN roles AS TRdirect ON (TRdirect.ID=TUR.RoleID)
+	SELECT COUNT(*) FROM user_roles AS TUR
+	JOIN roles AS TRdirect ON (TRdirect.ID=TUR.role_id)
 	JOIN roles AS TR ON (TR.Lft BETWEEN TRdirect.Lft AND TRdirect.Rght)
 	WHERE
-	TUR.UserID=? AND TR.ID=?`)
+	TUR.user_id=? AND TR.ID=?`)
 
 	var result int64
 	err = u.rbac.db.QueryRow(query, userId, roleId).Scan(&result)
@@ -127,8 +127,8 @@ func (u userManager) AllRoles(userId int64) (Roles, error) {
 		FROM
 			%s AS TRel
 		JOIN roles AS TR ON
-		(TRel.RoleID=TR.ID)
-		WHERE TRel.UserID=?`, u.getTable())
+		(TRel.role_id=TR.ID)
+		WHERE TRel.user_id=?`, u.getTable())
 
 	rows, err := u.rbac.db.Query(query, userId)
 	if err != nil {
@@ -150,7 +150,7 @@ func (u userManager) AllRoles(userId int64) (Roles, error) {
 
 func (u userManager) RoleCount(userId int64) (int64, error) {
 	var result int64
-	err := u.rbac.db.QueryRow(fmt.Sprintf("SELECT COUNT(*) AS Result FROM %s WHERE UserID=?", u.getTable()), userId).Scan(&result)
+	err := u.rbac.db.QueryRow(fmt.Sprintf("SELECT COUNT(*) AS Result FROM %s WHERE user_id=?", u.getTable()), userId).Scan(&result)
 
 	if err != nil {
 		return 0, err
@@ -169,11 +169,11 @@ func (u userManager) ResetAssignments(ensure bool) error {
 	}
 
 	var err error
-	_, err = u.rbac.db.Exec("DELETE FROM userroles")
+	_, err = u.rbac.db.Exec("DELETE FROM user_roles")
 	if err != nil {
 		return err
 	}
-	_, err = u.rbac.db.Exec("ALTER TABLE userroles AUTO_INCREMENT =1")
+	_, err = u.rbac.db.Exec("ALTER TABLE user_roles AUTO_INCREMENT =1")
 	if err != nil {
 		return err
 	}

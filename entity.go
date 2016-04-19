@@ -186,12 +186,12 @@ func (e entity) resetAssignments(ensure bool) error {
 		log.Fatal("You must pass true to this function, otherwise it won't work.")
 	}
 
-	_, err = e.rbac.db.Exec("DELETE FROM rolepermissions")
+	_, err = e.rbac.db.Exec("DELETE FROM role_permissions")
 	if err != nil {
 		return err
 	}
 
-	_, err = e.rbac.db.Exec("ALTER TABLE rolepermissions AUTO_INCREMENT =1")
+	_, err = e.rbac.db.Exec("ALTER TABLE role_permissions AUTO_INCREMENT =1")
 	if err != nil {
 		return err
 	}

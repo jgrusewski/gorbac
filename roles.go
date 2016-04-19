@@ -68,9 +68,9 @@ func (r roleManager) HasPermission(role Role, permission Permission) (bool, erro
 
 	query := fmt.Sprintf(`
 		SELECT COUNT(*) AS Result
-		FROM rolepermissions AS TRel
-		JOIN permissions AS TP ON ( TP.ID= TRel.PermissionID)
-		JOIN roles AS TR ON ( TR.ID = TRel.RoleID)
+		FROM role_permissions AS TRel
+		JOIN permissions AS TP ON ( TP.ID= TRel.permission_id)
+		JOIN roles AS TR ON ( TR.ID = TRel.role_id)
 		WHERE TR.Lft BETWEEN
 			(SELECT Lft FROM roles WHERE ID=?)
 			AND
@@ -160,8 +160,8 @@ func (r roleManager) Permissions(role Role) (Permissions, error) {
 	SELECT 
 		TP.ID, TP.Title, TP.Description 
 	FROM permissions AS TP
-	LEFT JOIN rolepermissions AS TR ON (TR.PermissionID=TP.ID)
-	WHERE RoleID=? ORDER BY TP.ID`)
+	LEFT JOIN role_permissions AS TR ON (TR.permission_id=TP.ID)
+	WHERE role_id=? ORDER BY TP.ID`)
 
 	rows, err := r.rbac.db.Query(query, roleId)
 	if err != nil {
@@ -190,7 +190,7 @@ func (r roleManager) UnassignPermissions(role Role) error {
 	if err != nil {
 		return err
 	}
-	query := fmt.Sprintf("DELETE FROM rolepermissions WHERE RoleID=?")
+	query := fmt.Sprintf("DELETE FROM role_permissions WHERE role_id=?")
 	_, err = r.rbac.db.Exec(query, roleId)
 
 	if err != nil {
@@ -208,7 +208,7 @@ func (r roleManager) UnassignUsers(role Role) error {
 	if err != nil {
 		return err
 	}
-	query := fmt.Sprintf("DELETE FROM userroles WHERE RoleID=?")
+	query := fmt.Sprintf("DELETE FROM user_roles WHERE role_id=?")
 	_, err = r.rbac.db.Exec(query, roleId)
 
 	if err != nil {

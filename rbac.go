@@ -78,7 +78,7 @@ func (r *rbac) Assign(role Role, permission Permission) (int64, error) {
 		return 0, err
 	}
 
-	res, err := r.db.Exec("INSERT INTO rolepermissions (RoleID, PermissionID, AssignmentDate) VALUES(?,?,?)", roleId, permissionId, time.Now().Nanosecond())
+	res, err := r.db.Exec("INSERT INTO role_permissions (role_id, permission_id, AssignmentDate) VALUES(?,?,?)", roleId, permissionId, time.Now().Nanosecond())
 	if err != nil {
 		return 0, err
 	}
@@ -103,7 +103,7 @@ func (r *rbac) Unassign(role Role, permission Permission) error {
 		return err
 	}
 
-	_, err = r.db.Exec("DELETE FROM rolepermissions WHERE RoleId=? AND PermissionID=?", roleId, permissionId)
+	_, err = r.db.Exec("DELETE FROM role_permissions WHERE RoleId=? AND permission_id=?", roleId, permissionId)
 
 	if err != nil {
 		return err
@@ -127,21 +127,21 @@ func (r rbac) Check(permission Permission, userId int64) (bool, error) {
 	}
 
 	lastPart := `
-	ON ( TR.ID = TRel.RoleID)
+	ON ( TR.ID = TRel.role_id)
  							WHERE
- 							TUrel.UserID=?
+ 							TUrel.user_id=?
  							AND
  							TPdirect.ID=?
 	`
 	query := fmt.Sprintf(`SELECT COUNT(*) AS Result
 	FROM
-		userroles AS TUrel
-	JOIN roles AS TRdirect ON (TRdirect.ID=TUrel.RoleID)
+		user_roles AS TUrel
+	JOIN roles AS TRdirect ON (TRdirect.ID=TUrel.role_id)
 	JOIN roles AS TR ON ( TR.Lft BETWEEN TRdirect.Lft AND TRdirect.Rght)
 	JOIN
 		(permissions AS TPdirect
 			JOIN permissions AS TP ON (TPdirect.Lft BETWEEN TP.Lft AND TP.Rght)
-			JOIN rolepermissions AS TRel ON (TP.ID=TRel.PermissionID)
+			JOIN role_permissions AS TRel ON (TP.ID=TRel.permission_id)
 		) %s`, lastPart)
 
 	var result int64
