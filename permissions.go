@@ -1,7 +1,28 @@
 package gorbac
 
 type PermissionManager interface {
-	Entity
+	Add(title string, description string, parentId int64) (int64, error)
+	AddPath(path string, descriptions []string) (int64, error)
+
+	Assign(role Role, permission Permission) (int64, error)
+	Count() (int64, error)
+	Depth(id int64) (int64, error)
+	Descendants(absolute bool, id int64) ([]path, error)
+	Edit(id int64, title, description string) error
+	TitleId(title string) (int64, error)
+
+	Unassign(role Role, permission Permission) error
+	Children(id int64) ([]path, error)
+
+	ReturnId(entity string) (int64, error)
+	ParentNode(id int64) (int64, error)
+	Reset(ensure bool) error
+	ResetAssignments(ensure bool) error
+
+	GetDescription(Id int64) (string, error)
+	GetTitle(id int64) (string, error)
+
+	GetPath(id int64) (string, error)
 
 	GetPermissionId(permission Permission) (int64, error)
 }
