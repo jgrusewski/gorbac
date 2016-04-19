@@ -12,6 +12,7 @@ type permissionManager struct {
 	table  string
 }
 
+// Permission can be Id, Title or Path
 type Permission interface{}
 type Permissions []permission
 

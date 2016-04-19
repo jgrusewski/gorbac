@@ -23,7 +23,9 @@ type roleManager struct {
 	table  string
 }
 
+// Role can be Id, Title or Path
 type Role interface{}
+
 type role struct {
 	Id          int64
 	Title       string

@@ -10,20 +10,19 @@ import (
 )
 
 type Rbac interface {
-
 	// Assign a role to a permission (or vice-verse)
-	//
-	// @param mixed $Role
-	//         Id, Title and Path
-	// @param mixed $Permission
-	//         Id, Title and Path
-	// @return boolean inserted or existing
-	//
-	// @todo: Check for valid permissions/roles
-	// @todo: Implement custom error handler
+	// Returns insert id on success.
 	Assign(Role, Permission) (int64, error)
+
+	// Unassign a role to a permission (or vice-verse)
 	Unassign(Role, Permission) error
+
+	// Check whether a user has a permission or not.
+	// Returns true if a user has a permission, false if otherwise.
 	Check(permission Permission, userId int64) (bool, error)
+
+	// Remove all roles, permissions and assignments.
+	// (ensure) Is a required boolean parameter. If true is not passed an fatal will be raised.
 	Reset(ensure bool)
 
 	Permissions() PermissionManager
@@ -47,6 +46,7 @@ type rbac struct {
 	db *sql.DB
 }
 
+// Initialize a new Rbac Role Manager
 func New(config *Config) Rbac {
 	var rbac = new(rbac)
 
