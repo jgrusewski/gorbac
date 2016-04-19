@@ -74,7 +74,7 @@ func (u userManager) HasRole(role Role, userId int64) (bool, error) {
 		return false, ErrUserRequired
 	}
 
-	roleId, err := u.rbac.Roles().getRoleId(role)
+	roleId, err := u.rbac.Roles().GetRoleId(role)
 	if err != nil {
 		return false, err
 	}
@@ -106,7 +106,7 @@ func (u userManager) Unassign(role Role, userId int64) error {
 		return ErrUserRequired
 	}
 
-	roleId, err := u.rbac.roles.getRoleId(role)
+	roleId, err := u.rbac.roles.GetRoleId(role)
 	if err != nil {
 		return err
 	}

@@ -14,7 +14,7 @@ type RoleManager interface {
 	UnassignUsers(role Role) error
 	Remove(role Role, recursive bool) error
 
-	getRoleId(role Role) (int64, error)
+	GetRoleId(role Role) (int64, error)
 }
 
 type roleManager struct {
@@ -50,12 +50,12 @@ func (r roleManager) HasPermission(role Role, permission Permission) (bool, erro
 	var err error
 	var roleId, permissionId int64
 
-	roleId, err = r.getRoleId(role)
+	roleId, err = r.GetRoleId(role)
 	if err != nil {
 		return false, err
 	}
 
-	permissionId, err = r.rbac.Permissions().getPermissionId(permission)
+	permissionId, err = r.rbac.Permissions().GetPermissionId(permission)
 	if err != nil {
 		return false, err
 	}
@@ -100,7 +100,7 @@ func (r roleManager) Remove(role Role, recursive bool) error {
 	var err error
 	var roleId int64
 
-	roleId, err = r.getRoleId(role)
+	roleId, err = r.GetRoleId(role)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (r roleManager) Add(title string, description string, parentId int64) (int6
 	return r.entity.add(title, description, parentId)
 }
 
-func (r roleManager) AddPath(path string, description []string) (int, error) {
+func (r roleManager) AddPath(path string, description []string) (int64, error) {
 	return r.entity.addPath(path, description)
 }
 
@@ -145,7 +145,7 @@ func (r roleManager) Permissions(role Role) (Permissions, error) {
 	var roleId int64
 	var err error
 
-	roleId, err = r.rbac.Roles().getRoleId(role)
+	roleId, err = r.rbac.Roles().GetRoleId(role)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (r roleManager) UnassignPermissions(role Role) error {
 	var err error
 	var roleId int64
 
-	roleId, err = r.rbac.Roles().getRoleId(role)
+	roleId, err = r.rbac.Roles().GetRoleId(role)
 	if err != nil {
 		return err
 	}
@@ -198,7 +198,7 @@ func (r roleManager) UnassignUsers(role Role) error {
 	var err error
 	var roleId int64
 
-	roleId, err = r.rbac.Roles().getRoleId(role)
+	roleId, err = r.rbac.Roles().GetRoleId(role)
 	if err != nil {
 		return err
 	}
@@ -212,13 +212,14 @@ func (r roleManager) UnassignUsers(role Role) error {
 	return nil
 }
 
-func (r roleManager) getRoleId(role Role) (int64, error) {
+func (r roleManager) GetRoleId(role Role) (int64, error) {
 	var roleId int64
 	var err error
 	if _, ok := role.(int64); ok {
 		roleId = role.(int64)
 	} else if _, ok := role.(string); ok {
-		if role.(string)[:1] == "/ " {
+
+		if role.(string)[:1] == "/" {
 			roleId, err = r.entity.pathId(role.(string))
 			if err != nil {
 				return 0, err
@@ -254,6 +255,14 @@ func (r roleManager) Depth(id int64) (int64, error) {
 	return r.entity.depth(id)
 }
 
-func (r roleManager) Edit(id int64) error {
-	return r.entity.edit(id)
+func (r roleManager) Edit(id int64, title, description string) error {
+	return r.entity.edit(id, title, description)
+}
+
+func (r roleManager) ParentNode(id int64) (int64, error) {
+	return r.entity.parentNode(id)
+}
+
+func (r roleManager) ReturnId(entity string) (int64, error) {
+	return r.entity.returnId(entity)
 }

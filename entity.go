@@ -10,43 +10,44 @@ import (
 
 type Entity interface {
 	Add(title string, description string, parentId int64) (int64, error)
-	AddPath(path string, descriptions []string) (int, error)
+	AddPath(path string, descriptions []string) (int64, error)
 
 	Assign(role Role, permission Permission) (int64, error)
 	Count() (int64, error)
 	Depth(id int64) (int64, error)
 	//Descendants()
-	Edit(id int64) error
+	Edit(id int64, title, description string) error
 	TitleId(title string) (int64, error)
 
 	////Unassign()
-	//ReturnId()
-	//ParentNode()
 	//Children()
+
+	ReturnId(entity string) (int64, error)
+	ParentNode(id int64) (int64, error)
 	Reset(ensure bool) error
 	ResetAssignments(ensure bool) error
 
 	GetDescription(Id int64) (string, error)
-	GetTitle(Id int64) (string, error)
+	GetTitle(id int64) (string, error)
 
 	GetPath(id int64) (string, error)
 }
 
 type entityInternal interface {
 	add(title string, description string, parentId int64) (int64, error)
-	addPath(path string, descriptions []string) (int, error)
+	addPath(path string, descriptions []string) (int64, error)
 
 	assign(role Role, permission Permission) (int64, error)
 	count() (int64, error)
 	depth(id int64) (int64, error)
 	//Descendants()
-	edit(id int64) error
+	edit(id int64, title, description string) error
 	////Unassign()
-	//ReturnId()
+	returnId(entity string) (int64, error)
 	//ParentNode()
 	//Children()
-	getDescription(Id int64) (string, error)
-	getTitle(Id int64) (string, error)
+	getDescription(id int64) (string, error)
+	getTitle(id int64) (string, error)
 
 	getPath(id int64) (string, error)
 	reset(ensure bool) error
@@ -56,7 +57,8 @@ type entityInternal interface {
 	titleId(title string) (int64, error)
 	deleteConditional(id int64) error
 	deleteSubtreeConditional(id int64) error
-	pathConditional(id int64) (map[int64]string, error)
+	pathConditional(id int64) ([]path, error)
+	parentNode(id int64) (int64, error)
 }
 
 type entityHolder interface {
@@ -76,13 +78,17 @@ type entity struct {
 	entityHolder entityHolder
 }
 
+type path struct {
+	Id    int64
+	Title string
+}
+
 func (e entity) assign(role Role, permission Permission) (int64, error) {
 	return e.rbac.Assign(role, permission)
 }
 
 func (e entity) add(title, description string, parentId int64) (int64, error) {
 	e.lock()
-	defer e.unlock()
 
 	if parentId == 0 {
 		parentId = int64(e.rbac.rootId())
@@ -111,7 +117,6 @@ func (e entity) add(title, description string, parentId int64) (int64, error) {
 	}
 
 	query = fmt.Sprintf("INSERT INTO %s (`%s`, `%s`, `title`, `description`) VALUES (?,?,?,?)", e.entityHolder.getTable(), Right, Left)
-
 	res, err := e.rbac.db.Exec(query, right+1, right, title, description)
 	if err != nil {
 		return -1, err
@@ -137,11 +142,11 @@ func (e entity) titleId(title string) (int64, error) {
 }
 
 func (e entity) lock() {
-	e.rbac.db.Exec("LOCK TABLE " + e.entityHolder.getTable() + " WRITE")
+	e.rbac.db.Query("LOCK TABLE " + e.entityHolder.getTable())
 }
 
 func (e entity) unlock() {
-	e.rbac.db.Exec("UNLOCK TABLES")
+	e.rbac.db.Query("UNLOCK TABLES")
 }
 
 func (e entity) reset(ensure bool) error {
@@ -200,11 +205,9 @@ func (e entity) pathId(path string) (int64, error) {
 
 	parts = strings.Split(path, "/")
 
-	gc := "GROUP_CONCAT(parent.Title ORDER BY parent.Lft SEPARATOR '/')"
-
 	var query = fmt.Sprintf(`
 		SELECT 
-			node.ID, %s AS path 
+			node.ID, GROUP_CONCAT(parent.Title ORDER BY parent.Lft ASC SEPARATOR '/') AS path 
 		FROM 
 			%s AS node,
 			%s AS parent
@@ -212,11 +215,12 @@ func (e entity) pathId(path string) (int64, error) {
 			node.%s BETWEEN parent.%s And parent.%s
 		AND  node.Title=?
 		GROUP BY node.ID
-		HAVING path = ?`, gc, e.entityHolder.getTable(), e.entityHolder.getTable(), Left, Left, Right)
+		HAVING path = ?`, e.entityHolder.getTable(), e.entityHolder.getTable(), Left, Left, Right)
 
 	var id int64
 
-	err := e.rbac.db.QueryRow(query, parts[len(parts)-1], path).Scan(&id)
+	var x []uint8
+	err := e.rbac.db.QueryRow(query, parts[len(parts)-1], path).Scan(&id, &x)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return 0, err
@@ -228,7 +232,7 @@ func (e entity) pathId(path string) (int64, error) {
 	return id, nil
 }
 
-func (e entity) addPath(path string, descriptions []string) (int, error) {
+func (e entity) addPath(path string, descriptions []string) (int64, error) {
 	if path[:1] != "/" {
 		return 0, fmt.Errorf("The path supplied is not valid.")
 	}
@@ -236,7 +240,7 @@ func (e entity) addPath(path string, descriptions []string) (int, error) {
 	var parts []string
 	var err error
 
-	var nodesCreated int
+	var nodesCreated int64
 	var currentPath string
 	var pathId int64
 	var parentId int64
@@ -249,11 +253,9 @@ func (e entity) addPath(path string, descriptions []string) (int, error) {
 		if len(descriptions) > i {
 			description = descriptions[i]
 		}
-
 		currentPath += "/" + part
 
 		pathId, err = e.pathId(currentPath)
-
 		if err != ErrPathNotFound {
 			return nodesCreated, err
 		}
@@ -374,25 +376,23 @@ func (e entity) getPath(id int64) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if len(res) == 1 {
+		return "/", nil
+	}
 
 	var output string
-	for i := range res {
 
-		if id == 1 {
-			output = "/"
-		} else {
-			output += "/" + res[i]
+	for i, r := range res {
+		if i == 0 {
+			continue
 		}
-
-	}
-	if len(output) > 1 {
-		return output[len(res[1])+1:], nil
+		output += "/" + r.Title
 	}
 
 	return output, nil
 }
 
-func (e entity) pathConditional(id int64) (map[int64]string, error) {
+func (e entity) pathConditional(id int64) ([]path, error) {
 	query := fmt.Sprintf(`
 		SELECT parent.ID, parent.Title
 		FROM %s AS node,
@@ -406,8 +406,7 @@ func (e entity) pathConditional(id int64) (map[int64]string, error) {
 		return nil, err
 	}
 
-	var result map[int64]string = make(map[int64]string, 0)
-
+	var result []path
 	for rows.Next() {
 		var id int64
 		var title string
@@ -415,8 +414,7 @@ func (e entity) pathConditional(id int64) (map[int64]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		result[id] = title
-
+		result = append(result, path{id, title})
 	}
 
 	return result, nil
@@ -431,6 +429,37 @@ func (e entity) depth(id int64) (int64, error) {
 	return int64(len(res) - 1), nil
 }
 
-func (e *entity) edit(id int64) error {
+func (e entity) edit(id int64, title, description string) error {
+	query := fmt.Sprintf("UPDATE %s SET title=?, description=? WHERE id=?", e.entityHolder.getTable())
+	_, err := e.rbac.db.Exec(query, title, description, id)
+	if err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func (e entity) parentNode(id int64) (int64, error) {
+	res, err := e.pathConditional(id)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(res) < 2 {
+		return 0, nil
+	}
+
+	return res[len(res)-2].Id, nil
+}
+
+func (e entity) returnId(entity string) (int64, error) {
+	var entityId int64
+	var err error
+	if entity[:1] == "/" {
+		entityId, err = e.pathId(entity)
+	} else {
+		entityId, err = e.titleId(entity)
+	}
+
+	return entityId, err
 }

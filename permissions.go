@@ -3,7 +3,7 @@ package rbac
 type PermissionManager interface {
 	Entity
 
-	getPermissionId(permission Permission) (int64, error)
+	GetPermissionId(permission Permission) (int64, error)
 }
 
 type permissionManager struct {
@@ -53,11 +53,11 @@ func (p permissionManager) Reset(ensure bool) error {
 	return p.entity.reset(ensure)
 }
 
-func (p permissionManager) AddPath(path string, description []string) (int, error) {
+func (p permissionManager) AddPath(path string, description []string) (int64, error) {
 	return p.entity.addPath(path, description)
 }
 
-func (p permissionManager) getPermissionId(permission Permission) (int64, error) {
+func (p permissionManager) GetPermissionId(permission Permission) (int64, error) {
 	var permissionId int64
 	var err error
 	if _, ok := permission.(int64); ok {
@@ -99,6 +99,14 @@ func (p permissionManager) Depth(id int64) (int64, error) {
 	return p.entity.depth(id)
 }
 
-func (p permissionManager) Edit(id int64) error {
-	return nil
+func (p permissionManager) Edit(id int64, title, description string) error {
+	return p.entity.edit(id, title, description)
+}
+
+func (p permissionManager) ParentNode(id int64) (int64, error) {
+	return p.entity.parentNode(id)
+}
+
+func (p permissionManager) ReturnId(entity string) (int64, error) {
+	return p.entity.pathId(entity)
 }

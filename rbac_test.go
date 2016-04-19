@@ -1,20 +1,22 @@
 package rbac
 
 import (
-	"fmt"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 var rbacTest Rbac
+var mu sync.Mutex
 
 func TestMain(m *testing.M) {
 	rbacTest = New(&Config{Name: "smartident", Username: "root", Password: "pass", Host: "localhost", Port: 3306})
 	rbacTest.Reset(true)
 
 	os.Exit(m.Run())
+
 }
 
 func TestCreatePermission(t *testing.T) {
@@ -113,9 +115,16 @@ func TestRemoveRole(t *testing.T) {
 	assert.Nil(t, err)
 }
 func TestGetPath(t *testing.T) {
-	path, err := rbacTest.Roles().GetPath(4)
+	var err error
+	_, err = rbacTest.Roles().AddPath("/my/path", nil)
 	assert.Nil(t, err)
-	assert.Equal(t, "/admin/test", path)
+
+	pathId, err := rbacTest.Roles().GetRoleId("/my/path")
+	assert.Nil(t, err)
+
+	path, err := rbacTest.Roles().GetPath(pathId)
+	assert.Nil(t, err)
+	assert.Equal(t, "/my/path", path)
 
 }
 
@@ -138,7 +147,50 @@ func TestRemoveRoleRecursive(t *testing.T) {
 }
 
 func TestDepth(t *testing.T) {
-	depth, err := rbacTest.Roles().Depth(4)
+	_, err := rbacTest.Roles().AddPath("/my1/testpath/test1", nil)
 	assert.Nil(t, err)
-	fmt.Println(depth)
+
+	pathId, err := rbacTest.Roles().GetRoleId("/my1/testpath/test1")
+
+	depth, err := rbacTest.Roles().Depth(pathId)
+	assert.Nil(t, err)
+	assert.Equal(t, 3, depth)
+}
+
+func TestEdit(t *testing.T) {
+
+	roleId, err := rbacTest.Roles().GetRoleId("forum_moderator")
+	assert.Nil(t, err)
+
+	title, err := rbacTest.Roles().GetTitle(roleId)
+	assert.Nil(t, err)
+	assert.Equal(t, "forum_moderator", title)
+
+	err = rbacTest.Roles().Edit(roleId, "forum_moderator1", "")
+	title, err = rbacTest.Roles().GetTitle(roleId)
+	assert.Nil(t, err)
+	assert.Equal(t, "forum_moderator1", title)
+}
+
+func TestParentId(t *testing.T) {
+	roleId, err := rbacTest.Roles().GetRoleId("/my1/testpath/test1")
+	assert.Nil(t, err)
+
+	_, err = rbacTest.Roles().Add("test123", "", roleId)
+	newRoleId, err := rbacTest.Roles().GetRoleId("/my1/testpath/test1/test123")
+
+	parentId, err := rbacTest.Roles().ParentNode(newRoleId)
+	assert.Nil(t, err)
+	assert.Equal(t, roleId, parentId)
+
+}
+
+func TestReturnId(t *testing.T) {
+	roleId, err := rbacTest.Roles().GetRoleId("my1")
+	assert.Nil(t, err)
+
+	returnId, err := rbacTest.Roles().ReturnId("my1")
+	assert.Nil(t, err)
+
+	assert.Equal(t, roleId, returnId)
 }

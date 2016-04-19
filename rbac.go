@@ -56,12 +56,12 @@ func (r *rbac) Assign(role Role, permission Permission) (int64, error) {
 	var roleId int64
 	var permissionId int64
 
-	roleId, err = r.Roles().getRoleId(role)
+	roleId, err = r.Roles().GetRoleId(role)
 	if err != nil {
 		return 0, err
 	}
 
-	permissionId, err = r.permissions.getPermissionId(permission)
+	permissionId, err = r.permissions.GetPermissionId(permission)
 	if err != nil {
 		return 0, err
 	}
@@ -81,7 +81,7 @@ func (r rbac) Check(permission Permission, userId int64) (bool, error) {
 		return false, fmt.Errorf("userId cannot be null")
 	}
 
-	permissionId, err := r.permissions.getPermissionId(permission)
+	permissionId, err := r.permissions.GetPermissionId(permission)
 	if err != nil {
 		return false, err
 	}
