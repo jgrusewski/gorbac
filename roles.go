@@ -39,7 +39,7 @@ import (
 //}
 
 type Roles struct {
-	rbac   *rbac
+	rbac   *Rbac
 	entity entityInternal
 	table  string
 }
@@ -55,7 +55,7 @@ type role struct {
 
 var ErrRowRequired = errors.New("role not found")
 
-func newRoleManager(r *rbac) *Roles {
+func newRoleManager(r *Rbac) *Roles {
 	var Roles = new(Roles)
 	Roles.table = "roles"
 	Roles.rbac = r

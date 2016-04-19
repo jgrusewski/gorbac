@@ -11,23 +11,14 @@ import (
 // User can be Id(int,string)
 type User interface{}
 
-//type UserManager interface {
-//	Assign(role Role, userId User) (int64, error)
-//	Unassign(role Role, userId User) error
-//	AllRoles(userId User) ([]role, error)
-//	HasRole(role Role, userId User) (bool, error)
-//	RoleCount(userId User) (int64, error)
-//	ResetAssignments(ensure bool) error
-//}
-
 type Users struct {
-	rbac  *rbac
+	rbac  *Rbac
 	table string
 }
 
-var ErrUserRequired = errors.New("user_id is a required argument")
+var ErrUserRequired = errors.New("user id is a required argument")
 
-func newUsers(r *rbac) *Users {
+func newUsers(r *Rbac) *Users {
 	var users = new(Users)
 	users.table = "user_roles"
 	users.rbac = r

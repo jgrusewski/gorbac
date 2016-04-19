@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var rbacTest Rbac
+var rbacTest *Rbac
 var mu sync.Mutex
 
 func TestMain(m *testing.M) {

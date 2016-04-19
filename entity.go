@@ -49,7 +49,7 @@ var ErrTitleNotFound = errors.New("title not found")
 var ErrPathNotFound = errors.New("path not found")
 
 type entity struct {
-	rbac         *rbac
+	rbac         *Rbac
 	entityHolder entityHolder
 }
 
@@ -70,6 +70,7 @@ func (e entity) unassign(role Role, permission Permission) error {
 
 func (e entity) add(title, description string, parentId int64) (int64, error) {
 	e.lock()
+	defer e.unlock()
 
 	if parentId == 0 {
 		parentId = int64(e.rbac.rootId())

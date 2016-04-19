@@ -28,7 +28,7 @@ package gorbac
 //}
 
 type Permissions struct {
-	rbac   *rbac
+	rbac   *Rbac
 	entity entityInternal
 	table  string
 }
@@ -42,7 +42,7 @@ type permission struct {
 	Description string
 }
 
-func newPermissions(r *rbac) *Permissions {
+func newPermissions(r *Rbac) *Permissions {
 	var permissions = new(Permissions)
 	permissions.table = "permissions"
 	permissions.rbac = r

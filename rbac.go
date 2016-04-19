@@ -9,26 +9,26 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type Rbac interface {
-	// Assign a role to a permission (or vice-verse)
-	// Returns insert id on success.
-	Assign(Role, Permission) (int64, error)
-
-	// Unassign a role to a permission (or vice-verse)
-	Unassign(Role, Permission) error
-
-	// Check whether a user has a permission or not.
-	// Returns true if a user has a permission, false if otherwise.
-	Check(permission Permission, userId User) (bool, error)
-
-	// Remove all roles, permissions and assignments.
-	// (ensure) Is a required boolean parameter. If true is not passed an fatal will be raised.
-	Reset(ensure bool)
-
-	Permissions() *Permissions
-	Roles() *Roles
-	Users() *Users
-}
+//type Rbac interface {
+//	// Assign a role to a permission (or vice-verse)
+//	// Returns insert id on success.
+//	Assign(Role, Permission) (int64, error)
+//
+//	// Unassign a role to a permission (or vice-verse)
+//	Unassign(Role, Permission) error
+//
+//	// Check whether a user has a permission or not.
+//	// Returns true if a user has a permission, false if otherwise.
+//	Check(permission Permission, userId User) (bool, error)
+//
+//	// Remove all roles, permissions and assignments.
+//	// (ensure) Is a required boolean parameter. If true is not passed an fatal will be raised.
+//	Reset(ensure bool)
+//
+//	Permissions() *Permissions
+//	Roles() *Roles
+//	Users() *Users
+//}
 
 // Config MySQL connection string
 type Config struct {
@@ -39,7 +39,7 @@ type Config struct {
 	Password string
 }
 
-type rbac struct {
+type Rbac struct {
 	permissions *Permissions
 	roles       *Roles
 	users       *Users
@@ -48,8 +48,8 @@ type rbac struct {
 }
 
 // Initialize Rbac
-func New(config *Config) Rbac {
-	var rbac = new(rbac)
+func New(config *Config) *Rbac {
+	var rbac = new(Rbac)
 
 	rbac.roles = newRoleManager(rbac)
 	rbac.permissions = newPermissions(rbac)
@@ -68,7 +68,7 @@ func New(config *Config) Rbac {
 	return rbac
 }
 
-func (r *rbac) Assign(role Role, permission Permission) (int64, error) {
+func (r Rbac) Assign(role Role, permission Permission) (int64, error) {
 	var err error
 	var roleId int64
 	var permissionId int64
@@ -93,7 +93,7 @@ func (r *rbac) Assign(role Role, permission Permission) (int64, error) {
 	return insertId, nil
 }
 
-func (r *rbac) Unassign(role Role, permission Permission) error {
+func (r Rbac) Unassign(role Role, permission Permission) error {
 	var err error
 	var roleId int64
 	var permissionId int64
@@ -117,7 +117,7 @@ func (r *rbac) Unassign(role Role, permission Permission) error {
 	return nil
 }
 
-func (r rbac) Check(permission Permission, userId User) (bool, error) {
+func (r Rbac) Check(permission Permission, userId User) (bool, error) {
 	if _, ok := userId.(string); ok {
 		if userId.(string) == "" {
 			return false, ErrUserRequired
@@ -170,7 +170,7 @@ func (r rbac) Check(permission Permission, userId User) (bool, error) {
 	return false, nil
 }
 
-func (r rbac) Reset(ensure bool) {
+func (r Rbac) Reset(ensure bool) {
 	if err := r.roles.ResetAssignments(ensure); err != nil {
 		log.Fatal(err)
 	}
@@ -187,18 +187,18 @@ func (r rbac) Reset(ensure bool) {
 	}
 }
 
-func (r *rbac) rootId() int64 {
+func (r Rbac) rootId() int64 {
 	return 1
 }
 
-func (r rbac) Permissions() *Permissions {
+func (r Rbac) Permissions() *Permissions {
 	return r.permissions
 }
 
-func (r rbac) Roles() *Roles {
+func (r Rbac) Roles() *Roles {
 	return r.roles
 }
 
-func (r rbac) Users() *Users {
+func (r Rbac) Users() *Users {
 	return r.users
 }
