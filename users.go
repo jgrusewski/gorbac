@@ -14,7 +14,7 @@ type User interface{}
 type UserManager interface {
 	Assign(role Role, userId User) (int64, error)
 	Unassign(role Role, userId User) error
-	AllRoles(userId User) (Roles, error)
+	AllRoles(userId User) ([]role, error)
 	HasRole(role Role, userId User) (bool, error)
 	RoleCount(userId User) (int64, error)
 	ResetAssignments(ensure bool) error
@@ -145,7 +145,7 @@ func (u userManager) Unassign(role Role, userId User) error {
 }
 
 // Returns all Roles of a User.
-func (u userManager) AllRoles(userId User) (Roles, error) {
+func (u userManager) AllRoles(userId User) ([]role, error) {
 	if _, ok := userId.(string); ok {
 		if userId.(string) == "" {
 			return nil, ErrUserRequired
@@ -170,7 +170,7 @@ func (u userManager) AllRoles(userId User) (Roles, error) {
 		return nil, err
 	}
 
-	var roles Roles
+	var roles []role
 	for rows.Next() {
 		var role role
 		err := rows.Scan(&role.Id, &role.Title, &role.Description)

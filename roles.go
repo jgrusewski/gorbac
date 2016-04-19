@@ -5,38 +5,38 @@ import (
 	"fmt"
 )
 
-type RoleManager interface {
-	Add(title string, description string, parentId int64) (int64, error)
-	AddPath(path string, descriptions []string) (int64, error)
+//type RoleManager interface {
+//Add(title string, description string, parentId int64) (int64, error)
+//AddPath(path string, descriptions []string) (int64, error)
 
-	Assign(role Role, permission Permission) (int64, error)
-	Count() (int64, error)
-	Depth(id int64) (int64, error)
-	Descendants(absolute bool, id int64) ([]path, error)
-	Edit(id int64, title, description string) error
-	TitleId(title string) (int64, error)
+//Assign(role Role, permission Permission) (int64, error)
+//Count() (int64, error)
+//Depth(id int64) (int64, error)
+//Descendants(absolute bool, id int64) ([]path, error)
+//Edit(id int64, title, description string) error
+//TitleId(title string) (int64, error)
 
-	Unassign(role Role, permission Permission) error
-	Children(id int64) ([]path, error)
+//Unassign(role Role, permission Permission) error
+//Children(id int64) ([]path, error)
 
-	ReturnId(entity string) (int64, error)
-	ParentNode(id int64) (int64, error)
+//ReturnId(entity string) (int64, error)
+//ParentNode(id int64) (int64, error)
 
-	Reset(ensure bool) error
-	ResetAssignments(ensure bool) error
+//Reset(ensure bool) error
+//ResetAssignments(ensure bool) error
 
-	GetDescription(Id int64) (string, error)
-	GetTitle(id int64) (string, error)
-	GetPath(id int64) (string, error)
+//GetDescription(Id int64) (string, error)
+//GetTitle(id int64) (string, error)
+//GetPath(id int64) (string, error)
 
-	HasPermission(role Role, permission Permission) (bool, error)
-	Permissions(role Role) (Permissions, error)
-	UnassignPermissions(role Role) error
-	UnassignUsers(role Role) error
-	Remove(role Role, recursive bool) error
+//HasPermission(role Role, permission Permission) (bool, error)
+//Permissions(role Role) (Permissions, error)
+//UnassignPermissions(role Role) error
+//UnassignUsers(role Role) error
+//Remove(role Role, recursive bool) error
 
-	GetRoleId(role Role) (int64, error)
-}
+//GetRoleId(role Role) (int64, error)
+//}
 
 type roleManager struct {
 	rbac   *rbac
@@ -53,11 +53,11 @@ type role struct {
 	Description string
 }
 
-type Roles []role
+//type Roles []role
 
 var ErrRowRequired = errors.New("role not found")
 
-func newRoleManager(r *rbac) RoleManager {
+func newRoleManager(r *rbac) *roleManager {
 	var roleManager = new(roleManager)
 	roleManager.table = "roles"
 	roleManager.rbac = r

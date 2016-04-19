@@ -26,7 +26,7 @@ type Rbac interface {
 	Reset(ensure bool)
 
 	Permissions() PermissionManager
-	Roles() RoleManager
+	Roles() *roleManager
 	Users() UserManager
 }
 
@@ -41,7 +41,7 @@ type Config struct {
 
 type rbac struct {
 	permissions PermissionManager
-	roles       RoleManager
+	roles       *roleManager
 	users       UserManager
 
 	db *sql.DB
@@ -195,7 +195,7 @@ func (r rbac) Permissions() PermissionManager {
 	return r.permissions
 }
 
-func (r rbac) Roles() RoleManager {
+func (r rbac) Roles() *roleManager {
 	return r.roles
 }
 
