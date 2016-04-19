@@ -38,7 +38,7 @@ import (
 //GetRoleId(role Role) (int64, error)
 //}
 
-type roleManager struct {
+type Roles struct {
 	rbac   *rbac
 	entity entityInternal
 	table  string
@@ -57,23 +57,23 @@ type role struct {
 
 var ErrRowRequired = errors.New("role not found")
 
-func newRoleManager(r *rbac) *roleManager {
-	var roleManager = new(roleManager)
-	roleManager.table = "roles"
-	roleManager.rbac = r
-	roleManager.entity = &entity{rbac: r, entityHolder: roleManager}
-	return roleManager
+func newRoleManager(r *rbac) *Roles {
+	var Roles = new(Roles)
+	Roles.table = "roles"
+	Roles.rbac = r
+	Roles.entity = &entity{rbac: r, entityHolder: Roles}
+	return Roles
 }
 
-func (r roleManager) Assign(role Role, permission Permission) (int64, error) {
+func (r Roles) Assign(role Role, permission Permission) (int64, error) {
 	return r.entity.assign(role, permission)
 }
 
-func (r roleManager) Unassign(role Role, permission Permission) error {
+func (r Roles) Unassign(role Role, permission Permission) error {
 	return r.entity.unassign(role, permission)
 }
 
-func (r roleManager) HasPermission(role Role, permission Permission) (bool, error) {
+func (r Roles) HasPermission(role Role, permission Permission) (bool, error) {
 	var err error
 	var roleId, permissionId int64
 
@@ -123,7 +123,7 @@ func (r roleManager) HasPermission(role Role, permission Permission) (bool, erro
 	return false, nil
 }
 
-func (r roleManager) Remove(role Role, recursive bool) error {
+func (r Roles) Remove(role Role, recursive bool) error {
 	var err error
 	var roleId int64
 
@@ -144,31 +144,31 @@ func (r roleManager) Remove(role Role, recursive bool) error {
 	return nil
 }
 
-func (r roleManager) Add(title string, description string, parentId int64) (int64, error) {
+func (r Roles) Add(title string, description string, parentId int64) (int64, error) {
 	return r.entity.add(title, description, parentId)
 }
 
-func (r roleManager) AddPath(path string, description []string) (int64, error) {
+func (r Roles) AddPath(path string, description []string) (int64, error) {
 	return r.entity.addPath(path, description)
 }
 
-func (r roleManager) TitleId(title string) (int64, error) {
+func (r Roles) TitleId(title string) (int64, error) {
 	return r.entity.titleId(title)
 }
 
-func (r roleManager) Reset(ensure bool) error {
+func (r Roles) Reset(ensure bool) error {
 	return r.entity.reset(ensure)
 }
 
-func (r roleManager) getTable() string {
+func (r Roles) getTable() string {
 	return r.table
 }
 
-func (r roleManager) ResetAssignments(ensure bool) error {
+func (r Roles) ResetAssignments(ensure bool) error {
 	return r.entity.resetAssignments(ensure)
 }
 
-func (r roleManager) Permissions(role Role) (Permissions, error) {
+func (r Roles) Permissions(role Role) (Permissions, error) {
 	var roleId int64
 	var err error
 
@@ -203,7 +203,7 @@ func (r roleManager) Permissions(role Role) (Permissions, error) {
 
 }
 
-func (r roleManager) UnassignPermissions(role Role) error {
+func (r Roles) UnassignPermissions(role Role) error {
 	var err error
 	var roleId int64
 
@@ -221,7 +221,7 @@ func (r roleManager) UnassignPermissions(role Role) error {
 	return nil
 }
 
-func (r roleManager) UnassignUsers(role Role) error {
+func (r Roles) UnassignUsers(role Role) error {
 	var err error
 	var roleId int64
 
@@ -239,7 +239,7 @@ func (r roleManager) UnassignUsers(role Role) error {
 	return nil
 }
 
-func (r roleManager) GetRoleId(role Role) (int64, error) {
+func (r Roles) GetRoleId(role Role) (int64, error) {
 	var roleId int64
 	var err error
 	if _, ok := role.(int64); ok {
@@ -263,40 +263,40 @@ func (r roleManager) GetRoleId(role Role) (int64, error) {
 	return roleId, nil
 }
 
-func (r roleManager) Count() (int64, error) {
+func (r Roles) Count() (int64, error) {
 	return r.entity.count()
 }
-func (r roleManager) GetDescription(id int64) (string, error) {
+func (r Roles) GetDescription(id int64) (string, error) {
 	return r.entity.getTitle(id)
 }
 
-func (r roleManager) GetTitle(id int64) (string, error) {
+func (r Roles) GetTitle(id int64) (string, error) {
 	return r.entity.getTitle(id)
 }
 
-func (r roleManager) GetPath(id int64) (string, error) {
+func (r Roles) GetPath(id int64) (string, error) {
 	return r.entity.getPath(id)
 }
 
-func (r roleManager) Depth(id int64) (int64, error) {
+func (r Roles) Depth(id int64) (int64, error) {
 	return r.entity.depth(id)
 }
 
-func (r roleManager) Edit(id int64, title, description string) error {
+func (r Roles) Edit(id int64, title, description string) error {
 	return r.entity.edit(id, title, description)
 }
 
-func (r roleManager) ParentNode(id int64) (int64, error) {
+func (r Roles) ParentNode(id int64) (int64, error) {
 	return r.entity.parentNode(id)
 }
 
-func (r roleManager) ReturnId(entity string) (int64, error) {
+func (r Roles) ReturnId(entity string) (int64, error) {
 	return r.entity.returnId(entity)
 }
-func (r roleManager) Descendants(absolute bool, id int64) ([]path, error) {
+func (r Roles) Descendants(absolute bool, id int64) ([]path, error) {
 	return r.entity.descendants(absolute, id)
 }
 
-func (r roleManager) Children(id int64) ([]path, error) {
+func (r Roles) Children(id int64) ([]path, error) {
 	return r.entity.children(id)
 }
