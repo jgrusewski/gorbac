@@ -104,7 +104,7 @@ func (r *rbac) Unassign(role Role, permission Permission) error {
 		return err
 	}
 
-	_, err = r.db.Exec("DELETE FROM role_permissions WHERE RoleId=? AND permission_id=?", roleId, permissionId)
+	_, err = r.db.Exec("DELETE FROM role_permissions WHERE role_id=? AND permission_id=?", roleId, permissionId)
 
 	if err != nil {
 		return err

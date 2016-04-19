@@ -139,14 +139,18 @@ func TestRemoveRoleRecursive(t *testing.T) {
 	_, err = rbacTest.Assign("forum_moderator", "edit_posts")
 	assert.Nil(t, err)
 
-	//permissions, err := rbacTest.Roles().Permissions("forum_moderator")
-	//assert.Nil(t, err)
+	permissions, err := rbacTest.Roles().Permissions("forum_moderator")
+	assert.Nil(t, err)
 
-	//err = rbacTest.Unassign("forum_moderator", "delete_posts")
+	err = rbacTest.Unassign("forum_moderator", "delete_posts")
+	assert.Nil(t, err)
 
-	//permissions, err = rbacTest.Roles().Permissions("forum_moderator")
-	//assert.Nil(t, err)
-	//assert.Equal(t, 0, len(permissions))
+	err = rbacTest.Unassign("forum_moderator", "edit_posts")
+	assert.Nil(t, err)
+
+	permissions, err = rbacTest.Roles().Permissions("forum_moderator")
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(permissions))
 
 	_, err = rbacTest.Assign("forum_moderator", permissionId)
 	assert.Nil(t, err)
