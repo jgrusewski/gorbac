@@ -19,7 +19,7 @@ type Rbac interface {
 
 	// Check whether a user has a permission or not.
 	// Returns true if a user has a permission, false if otherwise.
-	Check(permission Permission, userId int64) (bool, error)
+	Check(permission Permission, userId User) (bool, error)
 
 	// Remove all roles, permissions and assignments.
 	// (ensure) Is a required boolean parameter. If true is not passed an fatal will be raised.
@@ -113,9 +113,15 @@ func (r *rbac) Unassign(role Role, permission Permission) error {
 	return nil
 }
 
-func (r rbac) Check(permission Permission, userId int64) (bool, error) {
-	if userId == 0 {
-		return false, fmt.Errorf("userId cannot be null")
+func (r rbac) Check(permission Permission, userId User) (bool, error) {
+	if _, ok := userId.(string); ok {
+		if userId.(string) == "" {
+			return false, ErrUserRequired
+		}
+	} else if _, ok := userId.(int64); ok {
+		if userId.(int64) == 0 {
+			return false, ErrUserRequired
+		}
 	}
 
 	permissionId, err := r.permissions.GetPermissionId(permission)
