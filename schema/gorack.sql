@@ -8,7 +8,7 @@ CREATE TABLE `permissions` (
   `title` char(64) CHARACTER SET utf8 NOT NULL,
   `description` text CHARACTER SET utf8 NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `Title` (`title`),
+  KEY `title` (`title`),
   KEY `lft` (`lft`),
   KEY `rght` (`rght`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
