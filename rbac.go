@@ -27,7 +27,7 @@ type Rbac interface {
 
 	Permissions() *Permissions
 	Roles() *Roles
-	Users() UserManager
+	Users() *Users
 }
 
 // Config MySQL connection string
@@ -42,7 +42,7 @@ type Config struct {
 type rbac struct {
 	permissions *Permissions
 	roles       *Roles
-	users       UserManager
+	users       *Users
 
 	db *sql.DB
 }
@@ -53,7 +53,7 @@ func New(config *Config) Rbac {
 
 	rbac.roles = newRoleManager(rbac)
 	rbac.permissions = newPermissions(rbac)
-	rbac.users = newUserManager(rbac)
+	rbac.users = newUsers(rbac)
 
 	if config.Port == 0 {
 		config.Port = 3306
@@ -199,6 +199,6 @@ func (r rbac) Roles() *Roles {
 	return r.roles
 }
 
-func (r rbac) Users() UserManager {
+func (r rbac) Users() *Users {
 	return r.users
 }

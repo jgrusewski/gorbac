@@ -11,31 +11,31 @@ import (
 // User can be Id(int,string)
 type User interface{}
 
-type UserManager interface {
-	Assign(role Role, userId User) (int64, error)
-	Unassign(role Role, userId User) error
-	AllRoles(userId User) ([]role, error)
-	HasRole(role Role, userId User) (bool, error)
-	RoleCount(userId User) (int64, error)
-	ResetAssignments(ensure bool) error
-}
+//type UserManager interface {
+//	Assign(role Role, userId User) (int64, error)
+//	Unassign(role Role, userId User) error
+//	AllRoles(userId User) ([]role, error)
+//	HasRole(role Role, userId User) (bool, error)
+//	RoleCount(userId User) (int64, error)
+//	ResetAssignments(ensure bool) error
+//}
 
-type userManager struct {
+type Users struct {
 	rbac  *rbac
 	table string
 }
 
 var ErrUserRequired = errors.New("user_id is a required argument")
 
-func newUserManager(r *rbac) UserManager {
-	var userManager = new(userManager)
-	userManager.table = "user_roles"
-	userManager.rbac = r
-	return userManager
+func newUsers(r *rbac) *Users {
+	var users = new(Users)
+	users.table = "user_roles"
+	users.rbac = r
+	return users
 }
 
 // Assigns a role to a user
-func (u userManager) Assign(role Role, userId User) (int64, error) {
+func (u Users) Assign(role Role, userId User) (int64, error) {
 	var err error
 	var roleId int64
 
@@ -81,7 +81,7 @@ func (u userManager) Assign(role Role, userId User) (int64, error) {
 }
 
 // Checks to see whether a User has a Role or not.
-func (u userManager) HasRole(role Role, userId User) (bool, error) {
+func (u Users) HasRole(role Role, userId User) (bool, error) {
 	if _, ok := userId.(string); ok {
 		if userId.(string) == "" {
 			return false, ErrUserRequired
@@ -120,7 +120,7 @@ func (u userManager) HasRole(role Role, userId User) (bool, error) {
 }
 
 // Unassigns a Role from a User.
-func (u userManager) Unassign(role Role, userId User) error {
+func (u Users) Unassign(role Role, userId User) error {
 	if _, ok := userId.(string); ok {
 		if userId.(string) == "" {
 			return ErrUserRequired
@@ -145,7 +145,7 @@ func (u userManager) Unassign(role Role, userId User) error {
 }
 
 // Returns all Roles of a User.
-func (u userManager) AllRoles(userId User) ([]role, error) {
+func (u Users) AllRoles(userId User) ([]role, error) {
 	if _, ok := userId.(string); ok {
 		if userId.(string) == "" {
 			return nil, ErrUserRequired
@@ -183,7 +183,7 @@ func (u userManager) AllRoles(userId User) ([]role, error) {
 	return roles, nil
 }
 
-func (u userManager) RoleCount(userId User) (int64, error) {
+func (u Users) RoleCount(userId User) (int64, error) {
 	if _, ok := userId.(string); ok {
 		if userId.(string) == "" {
 			return 0, ErrUserRequired
@@ -204,11 +204,11 @@ func (u userManager) RoleCount(userId User) (int64, error) {
 	return result, err
 }
 
-func (u userManager) getTable() string {
+func (u Users) getTable() string {
 	return u.table
 }
 
-func (u userManager) ResetAssignments(ensure bool) error {
+func (u Users) ResetAssignments(ensure bool) error {
 	if !ensure {
 		log.Fatal("You must pass true to this function, otherwise it won't work.")
 	}
