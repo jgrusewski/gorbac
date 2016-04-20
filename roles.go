@@ -186,6 +186,7 @@ func (r Roles) Permissions(role Role) ([]permission, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var permissions []permission
 	for rows.Next() {

@@ -387,6 +387,7 @@ func (e entity) pathConditional(id int64) ([]path, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var result []path
 	for rows.Next() {
@@ -478,6 +479,7 @@ func (e entity) descendants(absolute bool, id int64) ([]path, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var p path
@@ -519,6 +521,7 @@ func (e entity) children(id int64) ([]path, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var p path

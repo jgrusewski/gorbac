@@ -160,6 +160,7 @@ func (u Users) AllRoles(userId User) ([]role, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var roles []role
 	for rows.Next() {
