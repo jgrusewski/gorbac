@@ -105,10 +105,10 @@ func TestRoleHasPermission(t *testing.T) {
 func TestRemoveRole(t *testing.T) {
 	var err error
 
-	permissionId, err := rbacTest.Permissions().Add("edit_posts", "User can edit posts", 0)
+	permissionID, err := rbacTest.Permissions().Add("edit_posts", "User can edit posts", 0)
 	assert.Nil(t, err)
 
-	_, err = rbacTest.Assign("forum_moderator", permissionId)
+	_, err = rbacTest.Assign("forum_moderator", permissionID)
 	assert.Nil(t, err)
 
 	err = rbacTest.Roles().Remove("forum_moderator", false)
@@ -119,10 +119,10 @@ func TestGetPath(t *testing.T) {
 	_, err = rbacTest.Roles().AddPath("/my/path", nil)
 	assert.Nil(t, err)
 
-	pathId, err := rbacTest.Roles().GetRoleId("/my/path")
+	pathID, err := rbacTest.Roles().GetRoleID("/my/path")
 	assert.Nil(t, err)
 
-	path, err := rbacTest.Roles().GetPath(pathId)
+	path, err := rbacTest.Roles().GetPath(pathID)
 	assert.Nil(t, err)
 	assert.Equal(t, "/my/path", path)
 
@@ -133,7 +133,7 @@ func TestRemoveRoleRecursive(t *testing.T) {
 	_, err = rbacTest.Roles().Add("forum_moderator", "User can moderate forums", 0)
 	assert.Nil(t, err)
 
-	permissionId, err := rbacTest.Permissions().Add("edit_posts", "User can edit posts", 0)
+	permissionID, err := rbacTest.Permissions().Add("edit_posts", "User can edit posts", 0)
 	assert.Nil(t, err)
 
 	_, err = rbacTest.Assign("forum_moderator", "edit_posts")
@@ -152,7 +152,7 @@ func TestRemoveRoleRecursive(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(permissions))
 
-	_, err = rbacTest.Assign("forum_moderator", permissionId)
+	_, err = rbacTest.Assign("forum_moderator", permissionID)
 	assert.Nil(t, err)
 
 	err = rbacTest.Roles().Remove("forum_moderator", true)
@@ -163,63 +163,63 @@ func TestDepth(t *testing.T) {
 	_, err := rbacTest.Roles().AddPath("/my1/testpath/test1", nil)
 	assert.Nil(t, err)
 
-	pathId, err := rbacTest.Roles().GetRoleId("/my1/testpath/test1")
+	pathID, err := rbacTest.Roles().GetRoleID("/my1/testpath/test1")
 
-	depth, err := rbacTest.Roles().Depth(pathId)
+	depth, err := rbacTest.Roles().Depth(pathID)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, depth)
 }
 
 func TestEdit(t *testing.T) {
 
-	roleId, err := rbacTest.Roles().GetRoleId("forum_moderator")
+	roleID, err := rbacTest.Roles().GetRoleID("forum_moderator")
 	assert.Nil(t, err)
 
-	title, err := rbacTest.Roles().GetTitle(roleId)
+	title, err := rbacTest.Roles().GetTitle(roleID)
 	assert.Nil(t, err)
 	assert.Equal(t, "forum_moderator", title)
 
-	err = rbacTest.Roles().Edit(roleId, "forum_moderator1", "")
-	title, err = rbacTest.Roles().GetTitle(roleId)
+	err = rbacTest.Roles().Edit(roleID, "forum_moderator1", "")
+	title, err = rbacTest.Roles().GetTitle(roleID)
 	assert.Nil(t, err)
 	assert.Equal(t, "forum_moderator1", title)
 }
 
-func TestParentId(t *testing.T) {
-	roleId, err := rbacTest.Roles().GetRoleId("/my1/testpath/test1")
+func TestParentID(t *testing.T) {
+	roleID, err := rbacTest.Roles().GetRoleID("/my1/testpath/test1")
 	assert.Nil(t, err)
 
-	_, err = rbacTest.Roles().Add("test123", "", roleId)
-	newRoleId, err := rbacTest.Roles().GetRoleId("/my1/testpath/test1/test123")
+	_, err = rbacTest.Roles().Add("test123", "", roleID)
+	newRoleID, err := rbacTest.Roles().GetRoleID("/my1/testpath/test1/test123")
 
-	parentId, err := rbacTest.Roles().ParentNode(newRoleId)
+	parentID, err := rbacTest.Roles().ParentNode(newRoleID)
 	assert.Nil(t, err)
-	assert.Equal(t, roleId, parentId)
+	assert.Equal(t, roleID, parentID)
 
 }
 
-func TestReturnId(t *testing.T) {
-	roleId, err := rbacTest.Roles().GetRoleId("my1")
+func TestReturnID(t *testing.T) {
+	roleID, err := rbacTest.Roles().GetRoleID("my1")
 	assert.Nil(t, err)
 
-	returnId, err := rbacTest.Roles().ReturnId("my1")
+	returnID, err := rbacTest.Roles().ReturnID("my1")
 	assert.Nil(t, err)
 
-	assert.Equal(t, roleId, returnId)
+	assert.Equal(t, roleID, returnID)
 }
 
 func TestDescendants(t *testing.T) {
-	roleId, err := rbacTest.Roles().GetRoleId("my1")
+	roleID, err := rbacTest.Roles().GetRoleID("my1")
 	assert.Nil(t, err)
-	res, err := rbacTest.Roles().Descendants(false, roleId)
+	res, err := rbacTest.Roles().Descendants(false, roleID)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(res))
 }
 
 func TestChildren(t *testing.T) {
-	roleId, err := rbacTest.Roles().GetRoleId("my1")
+	roleID, err := rbacTest.Roles().GetRoleID("my1")
 	assert.Nil(t, err)
-	res, err := rbacTest.Roles().Children(roleId)
+	res, err := rbacTest.Roles().Children(roleID)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(res))
 }

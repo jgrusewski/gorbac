@@ -5,55 +5,25 @@ import (
 	"fmt"
 )
 
-//type RoleManager interface {
-//Add(title string, description string, parentId int64) (int64, error)
-//AddPath(path string, descriptions []string) (int64, error)
-
-//Assign(role Role, permission Permission) (int64, error)
-//Count() (int64, error)
-//Depth(id int64) (int64, error)
-//Descendants(absolute bool, id int64) ([]path, error)
-//Edit(id int64, title, description string) error
-//TitleId(title string) (int64, error)
-
-//Unassign(role Role, permission Permission) error
-//Children(id int64) ([]path, error)
-
-//ReturnId(entity string) (int64, error)
-//ParentNode(id int64) (int64, error)
-
-//Reset(ensure bool) error
-//ResetAssignments(ensure bool) error
-
-//GetDescription(Id int64) (string, error)
-//GetTitle(id int64) (string, error)
-//GetPath(id int64) (string, error)
-
-//HasPermission(role Role, permission Permission) (bool, error)
-//Permissions(role Role) (Permissions, error)
-//UnassignPermissions(role Role) error
-//UnassignUsers(role Role) error
-//Remove(role Role, recursive bool) error
-
-//GetRoleId(role Role) (int64, error)
-//}
-
 type Roles struct {
 	rbac   *Rbac
 	entity entityInternal
 	table  string
 }
 
-// Role can be Id, Title or Path
+// Role can be ID, Title or Path
 type Role interface{}
 
 type role struct {
-	Id          int64
+	ID          int64
 	Title       string
 	Description string
 }
 
-var ErrRowRequired = errors.New("role not found")
+// Error messages for Roles
+var (
+	ErrRowRequired = errors.New("role cannot be nil")
+)
 
 func newRoleManager(r *Rbac) *Roles {
 	var Roles = new(Roles)
@@ -63,24 +33,28 @@ func newRoleManager(r *Rbac) *Roles {
 	return Roles
 }
 
+// Assign a role to a permission (or vice-verse).
+// Returns true if successful, false if association already exists.
 func (r Roles) Assign(role Role, permission Permission) (int64, error) {
 	return r.entity.assign(role, permission)
 }
 
+// Unassign a Role-Permission relation.
 func (r Roles) Unassign(role Role, permission Permission) error {
 	return r.entity.unassign(role, permission)
 }
 
+// HasPermission checks to see if a Role has a Permission or not.
 func (r Roles) HasPermission(role Role, permission Permission) (bool, error) {
 	var err error
-	var roleId, permissionId int64
+	var roleID, permissionID int64
 
-	roleId, err = r.GetRoleId(role)
+	roleID, err = r.GetRoleID(role)
 	if err != nil {
 		return false, err
 	}
 
-	permissionId, err = r.rbac.Permissions().GetPermissionId(permission)
+	permissionID, err = r.rbac.Permissions().GetPermissionID(permission)
 	if err != nil {
 		return false, err
 	}
@@ -109,7 +83,7 @@ func (r Roles) HasPermission(role Role, permission Permission) (bool, error) {
 	`)
 
 	var result int64
-	err = r.rbac.db.QueryRow(query, roleId, roleId, permissionId).Scan(&result)
+	err = r.rbac.db.QueryRow(query, roleID, roleID, permissionID).Scan(&result)
 	if err != nil {
 		return false, err
 	}
@@ -121,11 +95,13 @@ func (r Roles) HasPermission(role Role, permission Permission) (bool, error) {
 	return false, nil
 }
 
+// Remove Roles from system.
+// If set to true, all descendants of the Permission will also be removed.
 func (r Roles) Remove(role Role, recursive bool) error {
 	var err error
-	var roleId int64
+	var roleID int64
 
-	roleId, err = r.GetRoleId(role)
+	roleID, err = r.GetRoleID(role)
 	if err != nil {
 		return err
 	}
@@ -134,24 +110,24 @@ func (r Roles) Remove(role Role, recursive bool) error {
 	r.UnassignUsers(role)
 
 	if recursive {
-		r.entity.deleteSubtreeConditional(roleId)
+		r.entity.deleteSubtreeConditional(roleID)
 	} else {
-		r.entity.deleteConditional(roleId)
+		r.entity.deleteConditional(roleID)
 	}
 
 	return nil
 }
 
-func (r Roles) Add(title string, description string, parentId int64) (int64, error) {
-	return r.entity.add(title, description, parentId)
+func (r Roles) Add(title string, description string, parentID int64) (int64, error) {
+	return r.entity.add(title, description, parentID)
 }
 
 func (r Roles) AddPath(path string, description []string) (int64, error) {
 	return r.entity.addPath(path, description)
 }
 
-func (r Roles) TitleId(title string) (int64, error) {
-	return r.entity.titleId(title)
+func (r Roles) TitleID(title string) (int64, error) {
+	return r.entity.titleID(title)
 }
 
 func (r Roles) Reset(ensure bool) error {
@@ -167,10 +143,10 @@ func (r Roles) ResetAssignments(ensure bool) error {
 }
 
 func (r Roles) Permissions(role Role) ([]permission, error) {
-	var roleId int64
+	var roleID int64
 	var err error
 
-	roleId, err = r.rbac.Roles().GetRoleId(role)
+	roleID, err = r.rbac.Roles().GetRoleID(role)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +158,7 @@ func (r Roles) Permissions(role Role) ([]permission, error) {
 	LEFT JOIN role_permissions AS TR ON (TR.permission_id=TP.ID)
 	WHERE role_id=? ORDER BY TP.ID`)
 
-	rows, err := r.rbac.db.Query(query, roleId)
+	rows, err := r.rbac.db.Query(query, roleID)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +167,7 @@ func (r Roles) Permissions(role Role) ([]permission, error) {
 	var permissions []permission
 	for rows.Next() {
 		var permission permission
-		err := rows.Scan(&permission.Id, &permission.Title, &permission.Description)
+		err := rows.Scan(&permission.ID, &permission.Title, &permission.Description)
 		if err != nil {
 			return nil, err
 		}
@@ -204,14 +180,14 @@ func (r Roles) Permissions(role Role) ([]permission, error) {
 
 func (r Roles) UnassignPermissions(role Role) error {
 	var err error
-	var roleId int64
+	var roleID int64
 
-	roleId, err = r.rbac.Roles().GetRoleId(role)
+	roleID, err = r.rbac.Roles().GetRoleID(role)
 	if err != nil {
 		return err
 	}
 	query := fmt.Sprintf("DELETE FROM role_permissions WHERE role_id=?")
-	_, err = r.rbac.db.Exec(query, roleId)
+	_, err = r.rbac.db.Exec(query, roleID)
 
 	if err != nil {
 		return err
@@ -222,14 +198,14 @@ func (r Roles) UnassignPermissions(role Role) error {
 
 func (r Roles) UnassignUsers(role Role) error {
 	var err error
-	var roleId int64
+	var roleID int64
 
-	roleId, err = r.rbac.Roles().GetRoleId(role)
+	roleID, err = r.rbac.Roles().GetRoleID(role)
 	if err != nil {
 		return err
 	}
 	query := fmt.Sprintf("DELETE FROM user_roles WHERE role_id=?")
-	_, err = r.rbac.db.Exec(query, roleId)
+	_, err = r.rbac.db.Exec(query, roleID)
 
 	if err != nil {
 		return err
@@ -238,20 +214,20 @@ func (r Roles) UnassignUsers(role Role) error {
 	return nil
 }
 
-func (r Roles) GetRoleId(role Role) (int64, error) {
-	var roleId int64
+func (r Roles) GetRoleID(role Role) (int64, error) {
+	var roleID int64
 	var err error
 	if _, ok := role.(int64); ok {
-		roleId = role.(int64)
+		roleID = role.(int64)
 	} else if _, ok := role.(string); ok {
 
 		if role.(string)[:1] == "/" {
-			roleId, err = r.entity.pathId(role.(string))
+			roleID, err = r.entity.pathID(role.(string))
 			if err != nil {
 				return 0, err
 			}
 		} else {
-			roleId, err = r.entity.titleId(role.(string))
+			roleID, err = r.entity.titleID(role.(string))
 
 			if err != nil {
 				return 0, err
@@ -259,7 +235,7 @@ func (r Roles) GetRoleId(role Role) (int64, error) {
 		}
 	}
 
-	return roleId, nil
+	return roleID, nil
 }
 
 func (r Roles) Count() (int64, error) {
@@ -289,13 +265,16 @@ func (r Roles) ParentNode(id int64) (int64, error) {
 	return r.entity.parentNode(id)
 }
 
-func (r Roles) ReturnId(entity string) (int64, error) {
-	return r.entity.returnId(entity)
+func (r Roles) ReturnID(entity string) (int64, error) {
+	return r.entity.returnID(entity)
 }
+
+// Descendants returns descendants of an Entity, with their depths in integer.
 func (r Roles) Descendants(absolute bool, id int64) ([]path, error) {
 	return r.entity.descendants(absolute, id)
 }
 
+// Children returns children of an Entity.
 func (r Roles) Children(id int64) ([]path, error) {
 	return r.entity.children(id)
 }

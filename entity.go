@@ -9,7 +9,7 @@ import (
 )
 
 type entityInternal interface {
-	add(title string, description string, parentId int64) (int64, error)
+	add(title string, description string, parentID int64) (int64, error)
 	addPath(path string, descriptions []string) (int64, error)
 
 	assign(role Role, permission Permission) (int64, error)
@@ -19,7 +19,7 @@ type entityInternal interface {
 
 	edit(id int64, title, description string) error
 	unassign(role Role, permission Permission) error
-	returnId(entity string) (int64, error)
+	returnID(entity string) (int64, error)
 	children(id int64) ([]path, error)
 	getDescription(id int64) (string, error)
 	getTitle(id int64) (string, error)
@@ -28,8 +28,8 @@ type entityInternal interface {
 	reset(ensure bool) error
 	resetAssignments(ensure bool) error
 
-	pathId(path string) (int64, error)
-	titleId(title string) (int64, error)
+	pathID(path string) (int64, error)
+	titleID(title string) (int64, error)
 	deleteConditional(id int64) error
 	deleteSubtreeConditional(id int64) error
 	pathConditional(id int64) ([]path, error)
@@ -40,13 +40,18 @@ type entityHolder interface {
 	getTable() string
 }
 
+// Left column name in sql scheme
+// Right column name in sql scheme
 const (
 	Left  string = "lft"
 	Right        = "rght"
 )
 
-var ErrTitleNotFound = errors.New("title not found")
-var ErrPathNotFound = errors.New("path not found")
+// Error messages for a invalid title name.
+var (
+	ErrTitleNotFound = errors.New("title not found")
+	ErrPathNotFound  = errors.New("path not found")
+)
 
 type entity struct {
 	rbac         *Rbac
@@ -54,7 +59,7 @@ type entity struct {
 }
 
 type path struct {
-	Id          int64
+	ID          int64
 	Title       string
 	Description string
 	Depth       int64
@@ -68,12 +73,12 @@ func (e entity) unassign(role Role, permission Permission) error {
 	return e.rbac.Unassign(role, permission)
 }
 
-func (e entity) add(title, description string, parentId int64) (int64, error) {
+func (e entity) add(title, description string, parentID int64) (int64, error) {
 	e.lock()
 	defer e.unlock()
 
-	if parentId == 0 {
-		parentId = int64(e.rbac.rootId())
+	if parentID == 0 {
+		parentID = int64(e.rbac.rootID())
 	}
 
 	var query string
@@ -81,7 +86,7 @@ func (e entity) add(title, description string, parentId int64) (int64, error) {
 
 	query = fmt.Sprintf("SELECT `%s` AS `right`, `%s` AS `left` FROM %s WHERE id=?", Right, Left, e.entityHolder.getTable())
 
-	err := e.rbac.db.QueryRow(query, parentId).Scan(&right, &left)
+	err := e.rbac.db.QueryRow(query, parentID).Scan(&right, &left)
 	if err != nil {
 		return -1, err
 	}
@@ -103,22 +108,21 @@ func (e entity) add(title, description string, parentId int64) (int64, error) {
 	if err != nil {
 		return -1, err
 	}
-	insertId, _ := res.LastInsertId()
+	insertID, _ := res.LastInsertId()
 
-	return insertId, nil
+	return insertID, nil
 }
 
-func (e entity) titleId(title string) (int64, error) {
+func (e entity) titleID(title string) (int64, error) {
 	var id int64
 
 	query := fmt.Sprintf("SELECT id FROM %s WHERE title=?", e.entityHolder.getTable())
 	err := e.rbac.db.QueryRow(query, title).Scan(&id)
 	if err != nil {
 		if err != sql.ErrNoRows {
-			return -1, err
-		} else {
-			return -1, ErrTitleNotFound
+			return 0, err
 		}
+		return 0, ErrTitleNotFound
 	}
 	return id, nil
 }
@@ -172,12 +176,12 @@ func (e entity) resetAssignments(ensure bool) error {
 		return err
 	}
 
-	e.assign(e.rbac.rootId(), e.rbac.rootId())
+	e.assign(e.rbac.rootID(), e.rbac.rootID())
 
 	return nil
 }
 
-func (e entity) pathId(path string) (int64, error) {
+func (e entity) pathID(path string) (int64, error) {
 	var parts []string
 	path = "root" + path
 
@@ -206,9 +210,8 @@ func (e entity) pathId(path string) (int64, error) {
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return 0, err
-		} else {
-			return 0, ErrPathNotFound
 		}
+		return 0, ErrPathNotFound
 	}
 
 	return id, nil
@@ -224,8 +227,8 @@ func (e entity) addPath(path string, descriptions []string) (int64, error) {
 
 	var nodesCreated int64
 	var currentPath string
-	var pathId int64
-	var parentId int64
+	var pathID int64
+	var parentID int64
 
 	path = path[1:]
 	parts = strings.Split(path, "/")
@@ -237,20 +240,20 @@ func (e entity) addPath(path string, descriptions []string) (int64, error) {
 		}
 		currentPath += "/" + part
 
-		pathId, err = e.pathId(currentPath)
+		pathID, err = e.pathID(currentPath)
 		if err != ErrPathNotFound {
 			return nodesCreated, err
 		}
 
-		if pathId == 0 {
-			parentId, err = e.add(part, description, parentId)
+		if pathID == 0 {
+			parentID, err = e.add(part, description, parentID)
 			if err != nil {
 				return nodesCreated, err
 			}
 
 			nodesCreated++
 		} else {
-			parentId = pathId
+			parentID = pathID
 		}
 	}
 
@@ -397,7 +400,7 @@ func (e entity) pathConditional(id int64) ([]path, error) {
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, path{Id: id, Title: title})
+		result = append(result, path{ID: id, Title: title})
 	}
 
 	return result, nil
@@ -432,19 +435,19 @@ func (e entity) parentNode(id int64) (int64, error) {
 		return 0, nil
 	}
 
-	return res[len(res)-2].Id, nil
+	return res[len(res)-2].ID, nil
 }
 
-func (e entity) returnId(entity string) (int64, error) {
-	var entityId int64
+func (e entity) returnID(entity string) (int64, error) {
+	var entityID int64
 	var err error
 	if entity[:1] == "/" {
-		entityId, err = e.pathId(entity)
+		entityID, err = e.pathID(entity)
 	} else {
-		entityId, err = e.titleId(entity)
+		entityID, err = e.titleID(entity)
 	}
 
-	return entityId, err
+	return entityID, err
 }
 
 func (e entity) descendants(absolute bool, id int64) ([]path, error) {
@@ -483,7 +486,7 @@ func (e entity) descendants(absolute bool, id int64) ([]path, error) {
 
 	for rows.Next() {
 		var p path
-		err := rows.Scan(&p.Id, &p.Title, &p.Description, &p.Depth)
+		err := rows.Scan(&p.ID, &p.Title, &p.Description, &p.Depth)
 		if err != nil {
 			return nil, err
 		}
@@ -525,7 +528,7 @@ func (e entity) children(id int64) ([]path, error) {
 
 	for rows.Next() {
 		var p path
-		err := rows.Scan(&p.Id, &p.Title, &p.Description, &p.Depth)
+		err := rows.Scan(&p.ID, &p.Title, &p.Description, &p.Depth)
 		if err != nil {
 			return nil, err
 		}

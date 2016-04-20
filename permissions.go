@@ -1,7 +1,7 @@
 package gorbac
 
 //type PermissionManager interface {
-//	Add(title string, description string, parentId int64) (int64, error)
+//	Add(title string, description string, parentID int64) (int64, error)
 //	AddPath(path string, descriptions []string) (int64, error)
 //
 //	Assign(role Role, permission Permission) (int64, error)
@@ -9,22 +9,22 @@ package gorbac
 //	Depth(id int64) (int64, error)
 //	Descendants(absolute bool, id int64) ([]path, error)
 //	Edit(id int64, title, description string) error
-//	TitleId(title string) (int64, error)
+//	TitleID(title string) (int64, error)
 //
 //	Unassign(role Role, permission Permission) error
 //	Children(id int64) ([]path, error)
 //
-//	ReturnId(entity string) (int64, error)
+//	ReturnID(entity string) (int64, error)
 //	ParentNode(id int64) (int64, error)
 //	Reset(ensure bool) error
 //	ResetAssignments(ensure bool) error
 //
-//	GetDescription(Id int64) (string, error)
+//	GetDescription(ID int64) (string, error)
 //	GetTitle(id int64) (string, error)
 //
 //	GetPath(id int64) (string, error)
 //
-//	GetPermissionId(permission Permission) (int64, error)
+//	GetPermissionID(permission Permission) (int64, error)
 //}
 
 type Permissions struct {
@@ -33,11 +33,11 @@ type Permissions struct {
 	table  string
 }
 
-// Permission can be Id, Title or Path
+// Permission can be ID, Title or Path
 type Permission interface{}
 
 type permission struct {
-	Id          int64
+	ID          int64
 	Title       string
 	Description string
 }
@@ -58,12 +58,12 @@ func (p Permissions) Unassign(role Role, permission Permission) error {
 	return p.entity.unassign(role, permission)
 }
 
-func (p Permissions) Add(title string, description string, parentId int64) (int64, error) {
-	return p.entity.add(title, description, parentId)
+func (p Permissions) Add(title string, description string, parentID int64) (int64, error) {
+	return p.entity.add(title, description, parentID)
 }
 
-func (p Permissions) TitleId(title string) (int64, error) {
-	return p.entity.titleId(title)
+func (p Permissions) TitleID(title string) (int64, error) {
+	return p.entity.titleID(title)
 }
 
 func (p Permissions) getTable() string {
@@ -82,26 +82,26 @@ func (p Permissions) AddPath(path string, description []string) (int64, error) {
 	return p.entity.addPath(path, description)
 }
 
-func (p Permissions) GetPermissionId(permission Permission) (int64, error) {
-	var permissionId int64
+func (p Permissions) GetPermissionID(permission Permission) (int64, error) {
+	var permissionID int64
 	var err error
 	if _, ok := permission.(int64); ok {
-		permissionId = permission.(int64)
+		permissionID = permission.(int64)
 	} else if _, ok := permission.(string); ok {
 		if permission.(string)[:1] == "/ " {
-			permissionId, err = p.entity.pathId(permission.(string))
+			permissionID, err = p.entity.pathID(permission.(string))
 			if err != nil {
 				return 0, err
 			}
 		} else {
-			permissionId, err = p.entity.titleId(permission.(string))
+			permissionID, err = p.entity.titleID(permission.(string))
 			if err != nil {
 				return 0, err
 			}
 		}
 	}
 
-	return permissionId, nil
+	return permissionID, nil
 }
 
 func (p Permissions) Count() (int64, error) {
@@ -132,8 +132,8 @@ func (p Permissions) ParentNode(id int64) (int64, error) {
 	return p.entity.parentNode(id)
 }
 
-func (p Permissions) ReturnId(entity string) (int64, error) {
-	return p.entity.pathId(entity)
+func (p Permissions) ReturnID(entity string) (int64, error) {
+	return p.entity.pathID(entity)
 }
 
 func (p Permissions) Descendants(absolute bool, id int64) ([]path, error) {

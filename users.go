@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// User can be Id(int,string)
+// User can be ID(int,string)
 type User interface{}
 
 type Users struct {
@@ -26,64 +26,64 @@ func newUsers(r *Rbac) *Users {
 }
 
 // Assigns a role to a user
-func (u Users) Assign(role Role, userId User) (int64, error) {
+func (u Users) Assign(role Role, userID User) (int64, error) {
 	var err error
-	var roleId int64
+	var roleID int64
 
-	if _, ok := userId.(string); ok {
-		if userId.(string) == "" {
+	if _, ok := userID.(string); ok {
+		if userID.(string) == "" {
 			return 0, ErrUserRequired
 		}
-	} else if _, ok := userId.(int64); ok {
-		if userId.(int64) == 0 {
+	} else if _, ok := userID.(int64); ok {
+		if userID.(int64) == 0 {
 			return 0, ErrUserRequired
 		}
 	}
 
 	if _, ok := role.(int64); ok {
-		roleId = role.(int64)
+		roleID = role.(int64)
 	} else if _, ok := role.(string); ok {
 		if role.(string)[:1] == "/" {
-			roleId, err = u.rbac.Roles().GetRoleId(role.(string))
+			roleID, err = u.rbac.Roles().GetRoleID(role.(string))
 			if err != nil {
 				return 0, err
 			}
 		} else {
-			roleId, err = u.rbac.Roles().TitleId(role.(string))
+			roleID, err = u.rbac.Roles().TitleID(role.(string))
 			if err != nil {
 				return 0, err
 			}
 		}
 	}
 
-	if roleId > 0 {
+	if roleID > 0 {
 		var query = fmt.Sprintf("INSERT INTO %s (user_id, role_id, assignment_date) VALUES(?,?,?)", u.getTable())
-		res, err := u.rbac.db.Exec(query, userId, roleId, time.Now().Nanosecond())
+		res, err := u.rbac.db.Exec(query, userID, roleID, time.Now().Nanosecond())
 		if err != nil {
 			return 0, err
 		}
 
-		insertId, _ := res.LastInsertId()
+		insertID, _ := res.LastInsertId()
 
-		return insertId, nil
+		return insertID, nil
 	}
 
 	return 0, fmt.Errorf("role could not be found")
 }
 
 // Checks to see whether a User has a Role or not.
-func (u Users) HasRole(role Role, userId User) (bool, error) {
-	if _, ok := userId.(string); ok {
-		if userId.(string) == "" {
+func (u Users) HasRole(role Role, userID User) (bool, error) {
+	if _, ok := userID.(string); ok {
+		if userID.(string) == "" {
 			return false, ErrUserRequired
 		}
-	} else if _, ok := userId.(int64); ok {
-		if userId.(int64) == 0 {
+	} else if _, ok := userID.(int64); ok {
+		if userID.(int64) == 0 {
 			return false, ErrUserRequired
 		}
 	}
 
-	roleId, err := u.rbac.Roles().GetRoleId(role)
+	roleID, err := u.rbac.Roles().GetRoleID(role)
 	if err != nil {
 		return false, err
 	}
@@ -96,7 +96,7 @@ func (u Users) HasRole(role Role, userId User) (bool, error) {
 	TUR.user_id=? AND TR.ID=?`)
 
 	var result int64
-	err = u.rbac.db.QueryRow(query, userId, roleId).Scan(&result)
+	err = u.rbac.db.QueryRow(query, userID, roleID).Scan(&result)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return false, err
@@ -111,23 +111,23 @@ func (u Users) HasRole(role Role, userId User) (bool, error) {
 }
 
 // Unassigns a Role from a User.
-func (u Users) Unassign(role Role, userId User) error {
-	if _, ok := userId.(string); ok {
-		if userId.(string) == "" {
+func (u Users) Unassign(role Role, userID User) error {
+	if _, ok := userID.(string); ok {
+		if userID.(string) == "" {
 			return ErrUserRequired
 		}
-	} else if _, ok := userId.(int64); ok {
-		if userId.(int64) == 0 {
+	} else if _, ok := userID.(int64); ok {
+		if userID.(int64) == 0 {
 			return ErrUserRequired
 		}
 	}
 
-	roleId, err := u.rbac.roles.GetRoleId(role)
+	roleID, err := u.rbac.roles.GetRoleID(role)
 	if err != nil {
 		return err
 	}
 
-	_, err = u.rbac.db.Exec(fmt.Sprintf("DELETE FROM %s WHERE user_id=? AND role_id=?", u.getTable()), userId, roleId)
+	_, err = u.rbac.db.Exec(fmt.Sprintf("DELETE FROM %s WHERE user_id=? AND role_id=?", u.getTable()), userID, roleID)
 	if err != nil {
 		return err
 	}
@@ -136,27 +136,27 @@ func (u Users) Unassign(role Role, userId User) error {
 }
 
 // Returns all Roles of a User.
-func (u Users) AllRoles(userId User) ([]role, error) {
-	if _, ok := userId.(string); ok {
-		if userId.(string) == "" {
+func (u Users) AllRoles(userID User) ([]role, error) {
+	if _, ok := userID.(string); ok {
+		if userID.(string) == "" {
 			return nil, ErrUserRequired
 		}
-	} else if _, ok := userId.(int64); ok {
-		if userId.(int64) == 0 {
+	} else if _, ok := userID.(int64); ok {
+		if userID.(int64) == 0 {
 			return nil, ErrUserRequired
 		}
 	}
 
 	query := fmt.Sprintf(`
 		SELECT
-			TR.Id, TR.Title, TR.Description
+			TR.ID, TR.Title, TR.Description
 		FROM
 			%s AS TRel
 		JOIN roles AS TR ON
 		(TRel.role_id=TR.ID)
 		WHERE TRel.user_id=?`, u.getTable())
 
-	rows, err := u.rbac.db.Query(query, userId)
+	rows, err := u.rbac.db.Query(query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (u Users) AllRoles(userId User) ([]role, error) {
 	var roles []role
 	for rows.Next() {
 		var role role
-		err := rows.Scan(&role.Id, &role.Title, &role.Description)
+		err := rows.Scan(&role.ID, &role.Title, &role.Description)
 		if err != nil {
 			return nil, err
 		}
@@ -175,19 +175,19 @@ func (u Users) AllRoles(userId User) ([]role, error) {
 	return roles, nil
 }
 
-func (u Users) RoleCount(userId User) (int64, error) {
-	if _, ok := userId.(string); ok {
-		if userId.(string) == "" {
+func (u Users) RoleCount(userID User) (int64, error) {
+	if _, ok := userID.(string); ok {
+		if userID.(string) == "" {
 			return 0, ErrUserRequired
 		}
-	} else if _, ok := userId.(int64); ok {
-		if userId.(int64) == 0 {
+	} else if _, ok := userID.(int64); ok {
+		if userID.(int64) == 0 {
 			return 0, ErrUserRequired
 		}
 	}
 
 	var result int64
-	err := u.rbac.db.QueryRow(fmt.Sprintf("SELECT COUNT(*) AS Result FROM %s WHERE user_id=?", u.getTable()), userId).Scan(&result)
+	err := u.rbac.db.QueryRow(fmt.Sprintf("SELECT COUNT(*) AS Result FROM %s WHERE user_id=?", u.getTable()), userID).Scan(&result)
 
 	if err != nil {
 		return 0, err
@@ -215,7 +215,7 @@ func (u Users) ResetAssignments(ensure bool) error {
 		return err
 	}
 
-	u.Assign("root", u.rbac.rootId())
+	u.Assign("root", u.rbac.rootID())
 
 	return nil
 }

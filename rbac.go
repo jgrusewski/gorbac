@@ -6,29 +6,9 @@ import (
 	"log"
 	"time"
 
+	// Import go-sql-driver package
 	_ "github.com/go-sql-driver/mysql"
 )
-
-//type Rbac interface {
-//	// Assign a role to a permission (or vice-verse)
-//	// Returns insert id on success.
-//	Assign(Role, Permission) (int64, error)
-//
-//	// Unassign a role to a permission (or vice-verse)
-//	Unassign(Role, Permission) error
-//
-//	// Check whether a user has a permission or not.
-//	// Returns true if a user has a permission, false if otherwise.
-//	Check(permission Permission, userId User) (bool, error)
-//
-//	// Remove all roles, permissions and assignments.
-//	// (ensure) Is a required boolean parameter. If true is not passed an fatal will be raised.
-//	Reset(ensure bool)
-//
-//	Permissions() *Permissions
-//	Roles() *Roles
-//	Users() *Users
-//}
 
 // Config MySQL connection string
 type Config struct {
@@ -47,7 +27,7 @@ type Rbac struct {
 	db *sql.DB
 }
 
-// Initialize Rbac
+// New returns a new instance of Rbac
 func New(config *Config) *Rbac {
 	var rbac = new(Rbac)
 
@@ -68,47 +48,50 @@ func New(config *Config) *Rbac {
 	return rbac
 }
 
+// Assign a role to a permission.
+// Returns true if successful, false if unsuccessful.
 func (r Rbac) Assign(role Role, permission Permission) (int64, error) {
 	var err error
-	var roleId int64
-	var permissionId int64
+	var roleID int64
+	var permissionID int64
 
-	roleId, err = r.Roles().GetRoleId(role)
+	roleID, err = r.Roles().GetRoleID(role)
 	if err != nil {
 		return 0, err
 	}
 
-	permissionId, err = r.permissions.GetPermissionId(permission)
+	permissionID, err = r.permissions.GetPermissionID(permission)
 	if err != nil {
 		return 0, err
 	}
 
-	res, err := r.db.Exec("INSERT INTO role_permissions (role_id, permission_id, assignment_date) VALUES(?,?,?)", roleId, permissionId, time.Now().Nanosecond())
+	res, err := r.db.Exec("INSERT INTO role_permissions (role_id, permission_id, assignment_date) VALUES(?,?,?)", roleID, permissionID, time.Now().Nanosecond())
 	if err != nil {
 		return 0, err
 	}
 
-	insertId, _ := res.LastInsertId()
+	insertID, _ := res.LastInsertId()
 
-	return insertId, nil
+	return insertID, nil
 }
 
+// Unassign a Role-Permission relation.
 func (r Rbac) Unassign(role Role, permission Permission) error {
 	var err error
-	var roleId int64
-	var permissionId int64
+	var roleID int64
+	var permissionID int64
 
-	roleId, err = r.Roles().GetRoleId(role)
+	roleID, err = r.Roles().GetRoleID(role)
 	if err != nil {
 		return err
 	}
 
-	permissionId, err = r.permissions.GetPermissionId(permission)
+	permissionID, err = r.permissions.GetPermissionID(permission)
 	if err != nil {
 		return err
 	}
 
-	_, err = r.db.Exec("DELETE FROM role_permissions WHERE role_id=? AND permission_id=?", roleId, permissionId)
+	_, err = r.db.Exec("DELETE FROM role_permissions WHERE role_id=? AND permission_id=?", roleID, permissionID)
 
 	if err != nil {
 		return err
@@ -117,23 +100,25 @@ func (r Rbac) Unassign(role Role, permission Permission) error {
 	return nil
 }
 
-func (r Rbac) Check(permission Permission, userId User) (bool, error) {
-	if _, ok := userId.(string); ok {
-		if userId.(string) == "" {
+// Check whether a user has a permission or not.
+// Returns true if a user has a permission, false if otherwise.
+func (r Rbac) Check(permission Permission, userID User) (bool, error) {
+	if _, ok := userID.(string); ok {
+		if userID.(string) == "" {
 			return false, ErrUserRequired
 		}
-	} else if _, ok := userId.(int64); ok {
-		if userId.(int64) == 0 {
+	} else if _, ok := userID.(int64); ok {
+		if userID.(int64) == 0 {
 			return false, ErrUserRequired
 		}
 	}
 
-	permissionId, err := r.permissions.GetPermissionId(permission)
+	permissionID, err := r.permissions.GetPermissionID(permission)
 	if err != nil {
 		return false, err
 	}
 
-	if permissionId == 0 {
+	if permissionID == 0 {
 		return false, fmt.Errorf("permission not found")
 	}
 
@@ -156,7 +141,7 @@ func (r Rbac) Check(permission Permission, userId User) (bool, error) {
 		) %s`, lastPart)
 
 	var result int64
-	err = r.db.QueryRow(query, userId, permissionId).Scan(&result)
+	err = r.db.QueryRow(query, userID, permissionID).Scan(&result)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return false, err
@@ -170,6 +155,8 @@ func (r Rbac) Check(permission Permission, userId User) (bool, error) {
 	return false, nil
 }
 
+// Reset all roles, permissions and assignments.
+// Ensure is a required boolean parameter. If true is not passed an fatal will be thrown.
 func (r Rbac) Reset(ensure bool) {
 	if err := r.roles.ResetAssignments(ensure); err != nil {
 		log.Fatal(err)
@@ -187,18 +174,21 @@ func (r Rbac) Reset(ensure bool) {
 	}
 }
 
-func (r Rbac) rootId() int64 {
-	return 1
-}
-
+// Permissions exposes underlaying permissions struct
 func (r Rbac) Permissions() *Permissions {
 	return r.permissions
 }
 
+// Roles exposes underlaying roles struct
 func (r Rbac) Roles() *Roles {
 	return r.roles
 }
 
+// Users exposes underlaying users struct
 func (r Rbac) Users() *Users {
 	return r.users
+}
+
+func (r Rbac) rootID() int64 {
+	return 1
 }
