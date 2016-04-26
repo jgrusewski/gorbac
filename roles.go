@@ -12,9 +12,9 @@ type Roles struct {
 }
 
 // Role can be ID, Title or Path
-type Role interface{}
+type RoleInterface interface{}
 
-type role struct {
+type Role struct {
 	ID          int64
 	Title       string
 	Description string
@@ -35,17 +35,17 @@ func newRoleManager(r *Rbac) *Roles {
 
 // Assign a role to a permission (or vice-verse).
 // Returns true if successful, false if association already exists.
-func (r Roles) Assign(role Role, permission Permission) (int64, error) {
+func (r Roles) Assign(role RoleInterface, permission Permission) (int64, error) {
 	return r.entity.assign(role, permission)
 }
 
 // Unassign a Role-Permission relation.
-func (r Roles) Unassign(role Role, permission Permission) error {
+func (r Roles) Unassign(role RoleInterface, permission Permission) error {
 	return r.entity.unassign(role, permission)
 }
 
 // HasPermission checks to see if a Role has a Permission or not.
-func (r Roles) HasPermission(role Role, permission Permission) (bool, error) {
+func (r Roles) HasPermission(role RoleInterface, permission Permission) (bool, error) {
 	var err error
 	var roleID, permissionID int64
 
@@ -97,7 +97,7 @@ func (r Roles) HasPermission(role Role, permission Permission) (bool, error) {
 
 // Remove Roles from system.
 // If set to true, all descendants of the Permission will also be removed.
-func (r Roles) Remove(role Role, recursive bool) error {
+func (r Roles) Remove(role RoleInterface, recursive bool) error {
 	var err error
 	var roleID int64
 
@@ -142,7 +142,7 @@ func (r Roles) ResetAssignments(ensure bool) error {
 	return r.entity.resetAssignments(ensure)
 }
 
-func (r Roles) Permissions(role Role) ([]permission, error) {
+func (r Roles) Permissions(role RoleInterface) ([]permission, error) {
 	var roleID int64
 	var err error
 
@@ -178,7 +178,7 @@ func (r Roles) Permissions(role Role) ([]permission, error) {
 
 }
 
-func (r Roles) UnassignPermissions(role Role) error {
+func (r Roles) UnassignPermissions(role RoleInterface) error {
 	var err error
 	var roleID int64
 
@@ -196,7 +196,7 @@ func (r Roles) UnassignPermissions(role Role) error {
 	return nil
 }
 
-func (r Roles) UnassignUsers(role Role) error {
+func (r Roles) UnassignUsers(role RoleInterface) error {
 	var err error
 	var roleID int64
 
@@ -214,7 +214,7 @@ func (r Roles) UnassignUsers(role Role) error {
 	return nil
 }
 
-func (r Roles) GetRoleID(role Role) (int64, error) {
+func (r Roles) GetRoleID(role RoleInterface) (int64, error) {
 	var roleID int64
 	var err error
 	if _, ok := role.(int64); ok {

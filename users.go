@@ -26,7 +26,7 @@ func newUsers(r *Rbac) *Users {
 }
 
 // Assigns a role to a user
-func (u Users) Assign(role Role, userID User) (int64, error) {
+func (u Users) Assign(role RoleInterface, userID User) (int64, error) {
 	var err error
 	var roleID int64
 
@@ -72,7 +72,7 @@ func (u Users) Assign(role Role, userID User) (int64, error) {
 }
 
 // Checks to see whether a User has a Role or not.
-func (u Users) HasRole(role Role, userID User) (bool, error) {
+func (u Users) HasRole(role RoleInterface, userID User) (bool, error) {
 	if _, ok := userID.(string); ok {
 		if userID.(string) == "" {
 			return false, ErrUserRequired
@@ -111,7 +111,7 @@ func (u Users) HasRole(role Role, userID User) (bool, error) {
 }
 
 // Unassigns a Role from a User.
-func (u Users) Unassign(role Role, userID User) error {
+func (u Users) Unassign(role RoleInterface, userID User) error {
 	if _, ok := userID.(string); ok {
 		if userID.(string) == "" {
 			return ErrUserRequired
@@ -136,7 +136,7 @@ func (u Users) Unassign(role Role, userID User) error {
 }
 
 // Returns all Roles of a User.
-func (u Users) AllRoles(userID User) ([]role, error) {
+func (u Users) AllRoles(userID User) ([]Role, error) {
 	if _, ok := userID.(string); ok {
 		if userID.(string) == "" {
 			return nil, ErrUserRequired
@@ -162,9 +162,9 @@ func (u Users) AllRoles(userID User) ([]role, error) {
 	}
 	defer rows.Close()
 
-	var roles []role
+	var roles []Role
 	for rows.Next() {
-		var role role
+		var role Role
 		err := rows.Scan(&role.ID, &role.Title, &role.Description)
 		if err != nil {
 			return nil, err

@@ -1,32 +1,5 @@
 package gorbac
 
-//type PermissionManager interface {
-//	Add(title string, description string, parentID int64) (int64, error)
-//	AddPath(path string, descriptions []string) (int64, error)
-//
-//	Assign(role Role, permission Permission) (int64, error)
-//	Count() (int64, error)
-//	Depth(id int64) (int64, error)
-//	Descendants(absolute bool, id int64) ([]path, error)
-//	Edit(id int64, title, description string) error
-//	TitleID(title string) (int64, error)
-//
-//	Unassign(role Role, permission Permission) error
-//	Children(id int64) ([]path, error)
-//
-//	ReturnID(entity string) (int64, error)
-//	ParentNode(id int64) (int64, error)
-//	Reset(ensure bool) error
-//	ResetAssignments(ensure bool) error
-//
-//	GetDescription(ID int64) (string, error)
-//	GetTitle(id int64) (string, error)
-//
-//	GetPath(id int64) (string, error)
-//
-//	GetPermissionID(permission Permission) (int64, error)
-//}
-
 type Permissions struct {
 	rbac   *Rbac
 	entity entityInternal
@@ -50,11 +23,11 @@ func newPermissions(r *Rbac) *Permissions {
 	return permissions
 }
 
-func (p Permissions) Assign(role Role, permission Permission) (int64, error) {
+func (p Permissions) Assign(role RoleInterface, permission Permission) (int64, error) {
 	return p.entity.assign(role, permission)
 }
 
-func (p Permissions) Unassign(role Role, permission Permission) error {
+func (p Permissions) Unassign(role RoleInterface, permission Permission) error {
 	return p.entity.unassign(role, permission)
 }
 

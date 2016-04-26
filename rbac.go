@@ -50,7 +50,7 @@ func New(config *Config) *Rbac {
 
 // Assign a role to a permission.
 // Returns true if successful, false if unsuccessful.
-func (r Rbac) Assign(role Role, permission Permission) (int64, error) {
+func (r Rbac) Assign(role RoleInterface, permission Permission) (int64, error) {
 	var err error
 	var roleID int64
 	var permissionID int64
@@ -76,7 +76,7 @@ func (r Rbac) Assign(role Role, permission Permission) (int64, error) {
 }
 
 // Unassign a Role-Permission relation.
-func (r Rbac) Unassign(role Role, permission Permission) error {
+func (r Rbac) Unassign(role RoleInterface, permission Permission) error {
 	var err error
 	var roleID int64
 	var permissionID int64
