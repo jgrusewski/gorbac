@@ -9,7 +9,18 @@ import (
 )
 
 // User can be ID(int,string)
-type User interface{}
+type UserInterface interface{}
+
+type Owner interface{}
+
+type Owners interface {
+	Assign(role RoleInterface, owner Owner) (int64, error)
+	HasRole(role RoleInterface, owner Owner) (bool, error)
+	Unassign(role RoleInterface, owner Owner) error
+	AllRoles(owner Owner) ([]Role, error)
+	RoleCount(owner Owner) (int64, error)
+	ResetAssignments(ensure bool) error
+}
 
 type Users struct {
 	rbac  *Rbac
@@ -18,15 +29,15 @@ type Users struct {
 
 var ErrUserRequired = errors.New("user id is a required argument")
 
-func newUsers(r *Rbac) *Users {
-	var users = new(Users)
+func newUsers(r *Rbac) Users {
+	var users = Users{}
 	users.table = "user_roles"
 	users.rbac = r
 	return users
 }
 
 // Assigns a role to a user
-func (u Users) Assign(role RoleInterface, userID User) (int64, error) {
+func (u Users) Assign(role RoleInterface, userID Owner) (int64, error) {
 	var err error
 	var roleID int64
 
@@ -71,8 +82,8 @@ func (u Users) Assign(role RoleInterface, userID User) (int64, error) {
 	return 0, fmt.Errorf("role could not be found")
 }
 
-// Checks to see whether a User has a Role or not.
-func (u Users) HasRole(role RoleInterface, userID User) (bool, error) {
+// Checks to see whether a UserInterface has a Role or not.
+func (u Users) HasRole(role RoleInterface, userID Owner) (bool, error) {
 	if _, ok := userID.(string); ok {
 		if userID.(string) == "" {
 			return false, ErrUserRequired
@@ -110,8 +121,8 @@ func (u Users) HasRole(role RoleInterface, userID User) (bool, error) {
 	return false, nil
 }
 
-// Unassigns a Role from a User.
-func (u Users) Unassign(role RoleInterface, userID User) error {
+// Unassigns a Role from a User interface.
+func (u Users) Unassign(role RoleInterface, userID Owner) error {
 	if _, ok := userID.(string); ok {
 		if userID.(string) == "" {
 			return ErrUserRequired
@@ -136,7 +147,7 @@ func (u Users) Unassign(role RoleInterface, userID User) error {
 }
 
 // Returns all Roles of a User.
-func (u Users) AllRoles(userID User) ([]Role, error) {
+func (u Users) AllRoles(userID Owner) ([]Role, error) {
 	if _, ok := userID.(string); ok {
 		if userID.(string) == "" {
 			return nil, ErrUserRequired
@@ -175,7 +186,7 @@ func (u Users) AllRoles(userID User) ([]Role, error) {
 	return roles, nil
 }
 
-func (u Users) RoleCount(userID User) (int64, error) {
+func (u Users) RoleCount(userID Owner) (int64, error) {
 	if _, ok := userID.(string); ok {
 		if userID.(string) == "" {
 			return 0, ErrUserRequired

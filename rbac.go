@@ -22,7 +22,9 @@ type Config struct {
 type Rbac struct {
 	permissions *Permissions
 	roles       *Roles
-	users       *Users
+	users       Owners // Default
+
+	extensions map[string]Owners
 
 	db *sql.DB
 }
@@ -35,6 +37,9 @@ func New(config *Config) *Rbac {
 	rbac.permissions = newPermissions(rbac)
 	rbac.users = newUsers(rbac)
 
+	rbac.extensions = make(map[string]Owners, 1)
+	rbac.AddExtension("users", newUsers(rbac))
+
 	if config.Port == 0 {
 		config.Port = 3306
 	}
@@ -46,6 +51,20 @@ func New(config *Config) *Rbac {
 	}
 
 	return rbac
+}
+
+func (r *Rbac) AddExtension(name string, extension Owners) error {
+	if r.extensions[name] != nil {
+		return fmt.Errorf("extestion with: (%v) already loaded", name)
+	}
+
+	r.extensions[name] = extension
+
+	return nil
+}
+
+func (r *Rbac) Extension(name string) Owners {
+	return r.extensions[name]
 }
 
 // Assign a role to a permission.
@@ -102,7 +121,7 @@ func (r Rbac) Unassign(role RoleInterface, permission Permission) error {
 
 // Check whether a user has a permission or not.
 // Returns true if a user has a permission, false if otherwise.
-func (r Rbac) Check(permission Permission, userID User) (bool, error) {
+func (r Rbac) Check(permission Permission, userID UserInterface) (bool, error) {
 	if _, ok := userID.(string); ok {
 		if userID.(string) == "" {
 			return false, ErrUserRequired
@@ -185,7 +204,7 @@ func (r Rbac) Roles() *Roles {
 }
 
 // Users exposes underlaying users struct
-func (r Rbac) Users() *Users {
+func (r Rbac) Users() Owners {
 	return r.users
 }
 
