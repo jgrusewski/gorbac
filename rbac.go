@@ -38,7 +38,7 @@ func New(config *Config) *Rbac {
 	rbac.users = newUsers(rbac)
 
 	rbac.extensions = make(map[string]Owners, 1)
-	rbac.AddExtension("users", newUsers(rbac))
+	rbac.AddOwnerExtension("users", newUsers(rbac))
 
 	if config.Port == 0 {
 		config.Port = 3306
@@ -53,7 +53,7 @@ func New(config *Config) *Rbac {
 	return rbac
 }
 
-func (r *Rbac) AddExtension(name string, extension Owners) error {
+func (r *Rbac) AddOwnerExtension(name string, extension Owners) error {
 	if r.extensions[name] != nil {
 		return fmt.Errorf("extestion with: (%v) already loaded", name)
 	}
@@ -63,8 +63,12 @@ func (r *Rbac) AddExtension(name string, extension Owners) error {
 	return nil
 }
 
-func (r *Rbac) Extension(name string) Owners {
+func (r *Rbac) OwnerExtension(name string) Owners {
 	return r.extensions[name]
+}
+
+func (r *Rbac) DB() *sql.DB {
+	return r.db
 }
 
 // Assign a role to a permission.

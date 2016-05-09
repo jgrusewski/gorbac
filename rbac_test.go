@@ -36,7 +36,7 @@ func TestAssignPermissionToRole(t *testing.T) {
 }
 
 func TestAssignRoleToUser(t *testing.T) {
-	_, err := rbacTest.Users().Assign("forum_moderator", 105)
+	_, err := rbacTest.Users().Assign("forum_moderator", 105, nil)
 	assert.Nil(t, err)
 }
 
@@ -74,7 +74,7 @@ func TestUnassignRoleFromUser(t *testing.T) {
 }
 
 func TestAllRoles(t *testing.T) {
-	_, err := rbacTest.Users().Assign("forum_moderator", 105)
+	_, err := rbacTest.Users().Assign("forum_moderator", 105, nil)
 	assert.Nil(t, err)
 
 	roles, err := rbacTest.Users().AllRoles(105)

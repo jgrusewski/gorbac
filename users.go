@@ -14,7 +14,7 @@ type UserInterface interface{}
 type Owner interface{}
 
 type Owners interface {
-	Assign(role RoleInterface, owner Owner) (int64, error)
+	Assign(role RoleInterface, owner Owner, meta interface{}) (int64, error)
 	HasRole(role RoleInterface, owner Owner) (bool, error)
 	Unassign(role RoleInterface, owner Owner) error
 	AllRoles(owner Owner) ([]Role, error)
@@ -37,7 +37,7 @@ func newUsers(r *Rbac) Users {
 }
 
 // Assigns a role to a user
-func (u Users) Assign(role RoleInterface, userID Owner) (int64, error) {
+func (u Users) Assign(role RoleInterface, userID Owner, _ interface{}) (int64, error) {
 	var err error
 	var roleID int64
 
@@ -226,7 +226,7 @@ func (u Users) ResetAssignments(ensure bool) error {
 		return err
 	}
 
-	u.Assign("root", u.rbac.rootID())
+	u.Assign("root", u.rbac.rootID(), nil)
 
 	return nil
 }
