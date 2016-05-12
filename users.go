@@ -20,6 +20,7 @@ type Owners interface {
 	AllRoles(owner Owner) ([]Role, error)
 	RoleCount(owner Owner) (int64, error)
 	ResetAssignments(ensure bool) error
+	Table() string
 }
 
 type Users struct {
@@ -34,6 +35,10 @@ func newUsers(r *Rbac) Users {
 	users.table = "user_roles"
 	users.rbac = r
 	return users
+}
+
+func (u Users) Table() string {
+	return u.table
 }
 
 // Assigns a role to a user

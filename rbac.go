@@ -2,6 +2,7 @@ package gorbac
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -28,6 +29,10 @@ type Rbac struct {
 
 	db *sql.DB
 }
+
+var (
+	ErrPermissionNotFound = errors.New("permission not found")
+)
 
 // New returns a new instance of Rbac
 func New(config *Config) *Rbac {
@@ -73,7 +78,7 @@ func (r *Rbac) DB() *sql.DB {
 
 // Assign a role to a permission.
 // Returns true if successful, false if unsuccessful.
-func (r Rbac) Assign(role RoleInterface, permission Permission) (int64, error) {
+func (r Rbac) Assign(role RoleInterface, permission PermissionInterface) (int64, error) {
 	var err error
 	var roleID int64
 	var permissionID int64
@@ -99,7 +104,7 @@ func (r Rbac) Assign(role RoleInterface, permission Permission) (int64, error) {
 }
 
 // Unassign a Role-Permission relation.
-func (r Rbac) Unassign(role RoleInterface, permission Permission) error {
+func (r Rbac) Unassign(role RoleInterface, permission PermissionInterface) error {
 	var err error
 	var roleID int64
 	var permissionID int64
@@ -125,7 +130,7 @@ func (r Rbac) Unassign(role RoleInterface, permission Permission) error {
 
 // Check whether a user has a permission or not.
 // Returns true if a user has a permission, false if otherwise.
-func (r Rbac) Check(permission Permission, userID UserInterface) (bool, error) {
+func (r Rbac) Check(permission PermissionInterface, userID UserInterface) (bool, error) {
 	if _, ok := userID.(string); ok {
 		if userID.(string) == "" {
 			return false, ErrUserRequired
@@ -142,15 +147,15 @@ func (r Rbac) Check(permission Permission, userID UserInterface) (bool, error) {
 	}
 
 	if permissionID == 0 {
-		return false, fmt.Errorf("permission not found")
+		return false, ErrPermissionNotFound
 	}
 
 	lastPart := `
 	ON ( TR.ID = TRel.role_id)
- 							WHERE
- 							TUrel.user_id=?
- 							AND
- 							TPdirect.ID=?
+	WHERE
+		TUrel.user_id=?
+	AND
+		TPdirect.ID=?
 	`
 	query := fmt.Sprintf(`SELECT COUNT(*) AS Result
 	FROM
@@ -164,6 +169,7 @@ func (r Rbac) Check(permission Permission, userID UserInterface) (bool, error) {
 		) %s`, lastPart)
 
 	var result int64
+
 	err = r.db.QueryRow(query, userID, permissionID).Scan(&result)
 	if err != nil {
 		if err != sql.ErrNoRows {

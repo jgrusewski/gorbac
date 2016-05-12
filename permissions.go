@@ -7,7 +7,7 @@ type Permissions struct {
 }
 
 // Permission can be ID, Title or Path
-type Permission interface{}
+type PermissionInterface interface{}
 
 type permission struct {
 	ID          int64
@@ -23,11 +23,11 @@ func newPermissions(r *Rbac) *Permissions {
 	return permissions
 }
 
-func (p Permissions) Assign(role RoleInterface, permission Permission) (int64, error) {
+func (p Permissions) Assign(role RoleInterface, permission PermissionInterface) (int64, error) {
 	return p.entity.assign(role, permission)
 }
 
-func (p Permissions) Unassign(role RoleInterface, permission Permission) error {
+func (p Permissions) Unassign(role RoleInterface, permission PermissionInterface) error {
 	return p.entity.unassign(role, permission)
 }
 
@@ -55,7 +55,7 @@ func (p Permissions) AddPath(path string, description []string) (int64, error) {
 	return p.entity.addPath(path, description)
 }
 
-func (p Permissions) GetPermissionID(permission Permission) (int64, error) {
+func (p Permissions) GetPermissionID(permission PermissionInterface) (int64, error) {
 	var permissionID int64
 	var err error
 	if _, ok := permission.(int64); ok {

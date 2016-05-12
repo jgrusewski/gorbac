@@ -12,13 +12,13 @@ type entityInternal interface {
 	add(title string, description string, parentID int64) (int64, error)
 	addPath(path string, descriptions []string) (int64, error)
 
-	assign(role RoleInterface, permission Permission) (int64, error)
+	assign(role RoleInterface, permission PermissionInterface) (int64, error)
 	count() (int64, error)
 	depth(id int64) (int64, error)
 	descendants(absolute bool, id int64) ([]path, error)
 
 	edit(id int64, title, description string) error
-	unassign(role RoleInterface, permission Permission) error
+	unassign(role RoleInterface, permission PermissionInterface) error
 	returnID(entity string) (int64, error)
 	children(id int64) ([]path, error)
 	getDescription(id int64) (string, error)
@@ -65,11 +65,11 @@ type path struct {
 	Depth       int64
 }
 
-func (e entity) assign(role RoleInterface, permission Permission) (int64, error) {
+func (e entity) assign(role RoleInterface, permission PermissionInterface) (int64, error) {
 	return e.rbac.Assign(role, permission)
 }
 
-func (e entity) unassign(role RoleInterface, permission Permission) error {
+func (e entity) unassign(role RoleInterface, permission PermissionInterface) error {
 	return e.rbac.Unassign(role, permission)
 }
 

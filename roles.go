@@ -35,17 +35,17 @@ func newRoleManager(r *Rbac) *Roles {
 
 // Assign a role to a permission (or vice-verse).
 // Returns true if successful, false if association already exists.
-func (r Roles) Assign(role RoleInterface, permission Permission) (int64, error) {
+func (r Roles) Assign(role RoleInterface, permission PermissionInterface) (int64, error) {
 	return r.entity.assign(role, permission)
 }
 
 // Unassign a Role-Permission relation.
-func (r Roles) Unassign(role RoleInterface, permission Permission) error {
+func (r Roles) Unassign(role RoleInterface, permission PermissionInterface) error {
 	return r.entity.unassign(role, permission)
 }
 
 // HasPermission checks to see if a Role has a Permission or not.
-func (r Roles) HasPermission(role RoleInterface, permission Permission) (bool, error) {
+func (r Roles) HasPermission(role RoleInterface, permission PermissionInterface) (bool, error) {
 	var err error
 	var roleID, permissionID int64
 
