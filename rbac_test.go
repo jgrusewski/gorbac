@@ -77,7 +77,7 @@ func TestAllRoles(t *testing.T) {
 	_, err := rbacTest.Users().Assign("forum_moderator", 105, nil)
 	assert.Nil(t, err)
 
-	roles, err := rbacTest.Users().AllRoles(105)
+	roles, err := rbacTest.Users().AllRoles(105, nil)
 	assert.Nil(t, err)
 
 	assert.Equal(t, len(roles), 1)

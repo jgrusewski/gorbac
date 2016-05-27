@@ -122,6 +122,7 @@ func (e entity) titleID(title string) (int64, error) {
 		if err != sql.ErrNoRows {
 			return 0, err
 		}
+		fmt.Printf("%s", title)
 		return 0, ErrTitleNotFound
 	}
 	return id, nil

@@ -17,7 +17,7 @@ type Owners interface {
 	Assign(role RoleInterface, owner Owner, meta interface{}) (int64, error)
 	HasRole(role RoleInterface, owner Owner) (bool, error)
 	Unassign(role RoleInterface, owner Owner) error
-	AllRoles(owner Owner) ([]Role, error)
+	AllRoles(owner Owner, meta interface{}) ([]Role, error)
 	RoleCount(owner Owner) (int64, error)
 	ResetAssignments(ensure bool) error
 	Table() string
@@ -152,7 +152,7 @@ func (u Users) Unassign(role RoleInterface, userID Owner) error {
 }
 
 // Returns all Roles of a User.
-func (u Users) AllRoles(userID Owner) ([]Role, error) {
+func (u Users) AllRoles(userID Owner, _ interface{}) ([]Role, error) {
 	if _, ok := userID.(string); ok {
 		if userID.(string) == "" {
 			return nil, ErrUserRequired
